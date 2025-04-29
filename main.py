@@ -1,9 +1,11 @@
-import requests
 import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
+
+from services.climate_service import get_climatology
+from services.suitability_service import crop_suitability
 
 load_dotenv()
 
@@ -14,39 +16,40 @@ url: str = os.getenv("SUPABASE_URL")
 key: str = os.getenv("SUPABASE_KEY")
 supabase : Client = create_client(url, key)
 
-# API key for OpenWeather
-weather_api_key = os.getenv("OPENWEATHER_KEY")
-
 class Location(BaseModel):
-    latitude: float
-    longitude: float
+    lat: float
+    lon: float
 
-@app.post("/api/get-crops")
-async def get_crops(location: Location):
-    # Get climate data from OpenWeather API
-    weather_url = f"https://api.openweathermap.org/data/2.5/weather?lat={location.latitude}&lon={location.longitude}&appid={weather_api_key}&units=metric"
-    response = requests.get(weather_url)
-    weather_data = response.json()
+@app.post("/api/suggest-crops")
+async def suggest(req: Location):
+    climate = get_climatology(req.lat, req.lon)
 
-    if response.status_code != 200:
-        return {"error": "Failed to fetch weather data"}
+    crops = supabase.table("crops") \
+        .select("crop_id, crop_name, sow_month, harvest_month") \
+        .execute().data
     
-    temperature = weather_data['main']['temp']
-    rainfall = weather_data.get('rain', {}).get('1h', 0)
+    climates = supabase.table("crop_climate") \
+        .select("crop_id, t_min, t_max, rain_min, rain_max") \
+        .execute().data
 
-    # Get crops from supabase
-    crops_data = supabase.table('crop_climate').select('crop_id,t_min,t_max,rain_min,rain_max').execute()
-    crops = crops_data.data
+    rows = []
+    for c in crops:
+        cc = next((cl for cl in climates if cl["crop_id"] == c["crop_id"]), None)
+        if cc:
+            rows.append({
+                "crop_name": c["crop_name"],
+                "sow_month": c["sow_month"],
+                "harvest_month": c["harvest_month"],
+                "t_min": cc["t_min"],
+                "t_max": cc["t_max"],
+                "rain_min": cc["rain_min"],
+                "rain_max": cc["rain_max"],
+            })
 
-    suitable_crops = []
+    scored = []
+    for row in rows:
+        score = crop_suitability(row, climate)
+        scored.append((row["crop_name"], score))
 
-    # Filter crops based on climate data
-    for crop in crops:
-        if (
-            crop['t_min'] <= temperature <= crop['t_max']
-        ):
-            suitable_crops.append(crop['crop_id'])
-    
-    return {"suitable_crops": suitable_crops}
-
-    
+    suitable = [name for name, s in scored if s >= 0.2]
+    return {"suitable_crops" : suitable}
