@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -10,6 +11,14 @@ from services.suitability_service import crop_suitability
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Initialize Supabase client
 url: str = os.getenv("SUPABASE_URL")
@@ -51,5 +60,5 @@ async def suggest(req: Location):
         score = crop_suitability(row, climate)
         scored.append((row["crop_name"], score))
 
-    suitable = [name for name, s in scored if s >= 0.2]
+    suitable = [name for name, s in scored if s >= 0.65]
     return {"suitable_crops" : suitable}
