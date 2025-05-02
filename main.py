@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -62,3 +63,29 @@ async def suggest(req: Location):
 
     suitable = [name for name, s in scored if s >= 0.65]
     return {"suitable_crops" : suitable}
+
+@app.get("/api/soil-categories")
+async def soil_info():
+    soils = supabase.table("soils") \
+    .select("soil_name") \
+    .execute().data
+
+    soil_categories = []
+    for soil in soils:
+        soil_categories.append(soil["soil_name"]) 
+
+    return soil_categories
+
+@app.get("/api/all-crops")
+async def all_crops():
+    crops = supabase.table("crops") \
+        .select("crop_name") \
+        .execute().data
+    
+    crop_names = []
+
+    for crop in crops:
+        crop_names.append(crop["crop_name"])
+
+    return crop_names
+
