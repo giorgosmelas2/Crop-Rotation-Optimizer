@@ -23,7 +23,7 @@ supabase : Client = create_client(url, key)
 
 from app.api.all_crops import router as crops_router
 from app.api.soil_categories import router as soils_router
-from app.api.rotation_plan import router as rotation_router
+from app.api.rotation_info import router as rotation_router
 from app.api.suggest_crops import router as climate_router
 
 app.include_router(crops_router, prefix="/api")
