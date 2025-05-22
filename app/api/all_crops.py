@@ -6,12 +6,15 @@ router = APIRouter()
 @router.get("/all-crops")
 async def all_crops():
     crops = supabase.table("crops") \
-        .select("crop_name") \
+        .select("crop_id, crop_name") \
         .execute().data
     
-    crop_names = []
+    crop_data = {}
 
     for crop in crops:
-        crop_names.append(crop["crop_name"])
+        key = crop["crop_id"]
+        value = crop["crop_name"]
+        crop_data[key] = value
+        
 
-    return crop_names
+    return crop_data

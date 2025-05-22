@@ -21,15 +21,17 @@ async def suggest(req: Location):
     climates = supabase.table("crop_climate") \
         .select("crop_id, t_min, t_max, rain_min, rain_max") \
         .execute().data
-
+    
+    # Filter crops based on climate data
     rows = []
-    for c in crops:
-        cc = next((cl for cl in climates if cl["crop_id"] == c["crop_id"]), None)
+    for crop in crops:
+        cc = next((cl for cl in climates if cl["crop_id"] == crop["crop_id"]), None)
         if cc:
             rows.append({
-                "crop_name": c["crop_name"],
-                "sow_month": c["sow_month"],
-                "harvest_month": c["harvest_month"],
+                "crop_id": crop["crop_id"],
+                "crop_name": crop["crop_name"],
+                "sow_month": crop["sow_month"],
+                "harvest_month": crop["harvest_month"],
                 "t_min": cc["t_min"],
                 "t_max": cc["t_max"],
                 "rain_min": cc["rain_min"],
@@ -39,7 +41,11 @@ async def suggest(req: Location):
     scored = []
     for row in rows:
         score = crop_suitability(row, climate)
-        scored.append((row["crop_name"], score))
+        scored.append({
+            "id": row["crop_id"],
+            "name": row["crop_name"],
+            "score": score
+        })
 
-    suitable = [name for name, s in scored if s >= 0.65]
+    suitable = [crop for crop in scored if crop["score"] >= 0.65]
     return {"suitable_crops" : suitable}

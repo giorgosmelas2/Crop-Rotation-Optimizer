@@ -25,6 +25,5 @@ def get_climatology(lat: float, lon: float) -> pd.DataFrame:
         "tmax": [js["T2M_MAX"][m] for m in months],
         "rain": [js["PRECTOTCORR"][m] for m in months],
     })
-    print(df)
 
     return df
