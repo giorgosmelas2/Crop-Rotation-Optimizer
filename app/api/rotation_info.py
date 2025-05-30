@@ -9,6 +9,7 @@ class CropPair(BaseModel):
 
 class RotationInfo(BaseModel): 
     crops: List[str]
+    area: float
     texture: str
     irrigation: str
     nitrogen: float

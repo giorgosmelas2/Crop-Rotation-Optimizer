@@ -3,10 +3,7 @@ import random
 from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from supabase import create_client, Client
-from dotenv import load_dotenv
-
-load_dotenv()
+from app.services.supabase_client import supabase
 
 app = FastAPI()
 
@@ -17,14 +14,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Initialize Supabase client
-url: str = os.getenv("SUPABASE_URL")
-key: str = os.getenv("SUPABASE_KEY")
-supabase : Client = create_client(url, key)
-
 """
-
 from app.api.all_crops import router as crops_router
 from app.api.soil_categories import router as soils_router
 from app.api.rotation_info import router as rotation_router
@@ -36,12 +26,10 @@ app.include_router(soils_router, prefix="/api")
 app.include_router(rotation_router, prefix="/api")
 app.include_router(climate_router, prefix="/api")
 app.include_router(machinery_router, prefix="/api")
-
 """
 # The start of prediction model
 from app.ml.crop import Crop
 all_crops = [id for id in range(1, 71)]
-print("All crops:", all_crops)
 
 i = 0
 crop_ids = []
@@ -53,6 +41,7 @@ while i < 30:
 
 crops: List[Crop] = []
 for crop_id in crop_ids:
+    print("Fetching data for crop:", crop_id)
     try:
         crop = supabase.table("crops") \
             .select("*") \
@@ -74,11 +63,21 @@ for crop_id in crop_ids:
             .eq("crop_id", crop_id) \
             .execute().data
         
+        soil_id = supabase.table("crop_soils") \
+            .select("soil_id") \
+            .eq("crop_id", crop_id) \
+            .execute().data
+        
+        soil_type = supabase.table("soils") \
+            .select("soil_name") \
+            .eq("soil_id", soil_id[0]["soil_id"]) \
+            .execute().data
+        
     except Exception as e:
         print(f"Error fetching crop data for {crop_id}: {e}")
         continue
 
-    if crop and crop_cliamte and crop_nutrients and ressidue_returns: 
+    if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type: 
         
         crops.append(Crop(
             crop_id = crop[0]["crop_id"],
@@ -102,7 +101,7 @@ for crop_id in crop_ids:
             n = crop_nutrients[0]["n"],
             p = crop_nutrients[0]["p"],
             k = crop_nutrients[0]["k"],
-            soil_type = "-",
+            soil_type = soil_type[0]["soil_name"],
             residue_fraction = ressidue_returns[0]["residue_fraction"],
             n_fix = ressidue_returns[0]["n_fix"],
             n_ret = ressidue_returns[0]["n_ret"],
@@ -111,7 +110,3 @@ for crop_id in crop_ids:
         ))
 
 print(crops)
-    
-    
-    
-    

@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from fastapi import APIRouter
 from app.services.climate_service import get_climatology
 from app.services.suitability_service import crop_suitability
-from main import supabase
+from app.services.supabase_client import supabase
 
 router = APIRouter()
 
