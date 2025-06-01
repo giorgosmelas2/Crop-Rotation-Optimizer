@@ -1,18 +1,15 @@
 from pydantic import BaseModel
 from fastapi import APIRouter
-from app.services.climate_service import get_climatology
-from app.services.suitability_service import crop_suitability
 from app.services.supabase_client import supabase
+from app.models.coordinates import Coordinates
+from app.services.climate_service import get_climate_data
+from app.services.suitability_service import crop_suitability
 
 router = APIRouter()
 
-class Location(BaseModel):
-    lat: float
-    lon: float
-
 @router.post("/suggest-crops")
-async def suggest(req: Location):
-    climate = get_climatology(req.lat, req.lon)
+async def suggest(req: Coordinates):
+    climate = get_climate_data(req.lat, req.lng)
 
     crops = supabase.table("crops") \
         .select("crop_id, crop_name, sow_month, harvest_month") \

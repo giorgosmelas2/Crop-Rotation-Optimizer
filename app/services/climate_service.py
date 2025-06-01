@@ -1,16 +1,17 @@
-import requests, pandas as pd, datetime as dt
+import requests, pandas as pd
+from app.models.coordinates import Coordinates 
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 PARAMS   = "T2M_MIN,T2M_MAX,PRECTOTCORR"
 MONTH_ORDER = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
 
-def get_climatology(lat: float, lon: float) -> pd.DataFrame:
+def get_climate_data(coordinates: Coordinates) -> pd.DataFrame:
     params = {
         "parameters": PARAMS,
-        "community":  "AG",
-        "latitude":   lat,
-        "longitude":  lon,
-        "format":     "JSON"
+        "community": "AG",
+        "latitude": coordinates.lat,
+        "longitude": coordinates.lng,
+        "format": "JSON"
     }
 
     response = requests.get(BASE_URL, params=params, timeout=10)
