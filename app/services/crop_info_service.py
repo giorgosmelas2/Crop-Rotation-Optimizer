@@ -1,5 +1,5 @@
 from app.services.supabase_client import supabase
-from app.ml.crop import Crop
+from app.ml.core_models.crop import Crop
 from typing import List
 
 # Fetching the crop information from the Supabase database

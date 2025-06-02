@@ -53,3 +53,5 @@ class FieldState:
             f"spraying = {self.spraying}", 
             f"past_crops = {self.past_crops}",
         ]) + "\n)"
+    
+    
