@@ -2,12 +2,14 @@ from typing import List
 from app.ml.grid.cell import Cell
 
 class FieldGrid: 
-    def __int__(self, rows: int, cols: int, default_cell_data: dict):
-        self.rows = rows
-        self.cols = cols
-        self.grid: List[List[Cell]] = [
-            [Cell(**default_cell_data) for _ in range(cols)] 
-            for _ in range(rows)
+    def __init__(self, cells: List[Cell]):
+        self.cells = cells
+        self.cols = int(len(cells) ** 0.5)
+        self.rows = int(len(cells) / self.width) + (1 if len(cells) % self.width > 0 else 0)
+
+        self.grid = [
+            cells[i * self.cols : (i + 1) * self.cols]
+            for i in range(self.rows)
         ]
 
     def get_cell(self, row: int, col: int) -> Cell:
@@ -20,5 +22,9 @@ class FieldGrid:
 
     def __str__(self):
         return f"FieldGrid({self.rows}x{self.cols})"
+    
+    def print_grid(self):
+        for row in self.grid:
+            print(" | ".join(cell.current_crop or "Empty" for cell in row))
 
         

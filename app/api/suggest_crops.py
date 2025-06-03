@@ -9,7 +9,7 @@ router = APIRouter()
 
 @router.post("/suggest-crops")
 async def suggest(req: Coordinates):
-    climate = get_climate_data(req.lat, req.lng)
+    climate = get_climate_data(req)
 
     crops = supabase.table("crops") \
         .select("crop_id, crop_name, sow_month, harvest_month") \

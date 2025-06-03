@@ -23,7 +23,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
         fertilization=rotation_info.fertilization,
         spraying=rotation_info.spraying,
         irrigation=rotation_info.irrigation,
-        n=rotation_info.n,
+        n=rotation_info.n,  
         p=rotation_info.p,
         k=rotation_info.k,
         ph=rotation_info.ph,
@@ -49,5 +49,5 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     print(f"field: {field}")
     print(f"farmer_knowledge: {farmer_knowledge}")
     print(f"climate_df: {climate_df}")
-    # simulate_crop_rotation(field, crops, farmer_knowledge, rotation_years)
+    simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, rotation_years)
     

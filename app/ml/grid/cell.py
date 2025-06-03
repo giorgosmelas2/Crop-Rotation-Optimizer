@@ -3,6 +3,7 @@ from typing import List
 class Cell:
     def __init__(
             self,
+            area: float,
             n: float, 
             p: float, 
             k: float,
@@ -15,6 +16,7 @@ class Cell:
             pest_pressure: float = 0.0,
             crop=None):
         
+        self.area = area
         self.n = n
         self.p = p
         self.k = k
@@ -30,6 +32,7 @@ class Cell:
 
     def __str__(self):
         return "Cell(\n" + "\n".join([
+            f"area = {self.area}",
             f"n={self.n}", 
             f"p={self.p}", 
             f"k={self.k}", 
@@ -39,7 +42,7 @@ class Cell:
             f"fertilization={self.fertilization}",
             f"spraying={self.spraying}",
             f"crop_history={self.crop_history}",
-            f"crop={self.crop}", 
+            f"crop={self.current_crop}", 
             f"yield_={self.yield_}", 
             f"pest_pressure={self.pest_pressure}",
             ]) + "\n)"
