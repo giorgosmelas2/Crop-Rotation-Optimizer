@@ -1,8 +1,8 @@
 class Crop:
     def __init__(
             self,
-            crop_id: int,
-            crop_name: str,
+            id: int,
+            name: str,
             family: str,
             is_legume: bool,
             root_depth_cm: int,
@@ -30,8 +30,8 @@ class Crop:
             k_ret: float,
             ):
         
-        self.crop_id = crop_id
-        self.crop_name = crop_name
+        self.id = id
+        self.name = name
         self.family = family
         self.is_legume = is_legume
         self.root_depth_cm = root_depth_cm
@@ -61,8 +61,8 @@ class Crop:
 
     def __repr__(self):
         return "Crop(\n" + "\n".join([
-            f"crop_id: {self.crop_id}",
-            f"crop_name: {self.crop_name}",
+            f"crop_id: {self.id}",
+            f"crop_name: {self.name}",
             f"family: {self.family}",
             f"is_legume: {self.is_legume}",
             f"root_depth_cm: {self.root_depth_cm}",

@@ -51,3 +51,7 @@ class Cell:
         self.current_crop = crop_name
         self.crop_history.append(crop_name)
         self.yield_ = 0.0 # Reset yield when applying a new crop
+
+    def remove_crop(self):
+        self.current_crop = None
+        self.yield_ = 0.0

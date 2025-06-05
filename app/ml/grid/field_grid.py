@@ -5,7 +5,7 @@ class FieldGrid:
     def __init__(self, cells: List[Cell]):
         self.cells = cells
         self.cols = int(len(cells) ** 0.5)
-        self.rows = int(len(cells) / self.width) + (1 if len(cells) % self.width > 0 else 0)
+        self.rows = int(len(cells) / self.cols) + (1 if len(cells) % self.cols > 0 else 0)
 
         self.grid = [
             cells[i * self.cols : (i + 1) * self.cols]
@@ -13,12 +13,22 @@ class FieldGrid:
         ]
 
     def get_cell(self, row: int, col: int) -> Cell:
-        if 0 <= row < self.rows and 0 <= col < self.cols:
-            return self.grid[row][col]
+        if 0 <= row < self.rows:
+            if 0 <= col < len(self.grid[row]):
+                return self.grid[row][col]
         raise IndexError("Cell coordinates out of bounds")
+
     
-    def set_crop(self, row: int, col: int, crop_name: str):
-        self.grid[row][col].apply_crop(crop_name)
+    # Adds a crop to the specified cell
+    def sow_crop(self, row: int, col: int, name: str):
+        self.get_cell(row, col).apply_crop(name)
+
+    # Removes the crop from the specified cell
+    def harvest_crop(self, row: int, col: int):
+        self.get_cell(row, col).remove_crop()
+
+    def is_field_empty(self) -> bool:
+        return all(cell.current_crop is None for row in self.grid for cell in row)
 
     def __str__(self):
         return f"FieldGrid({self.rows}x{self.cols})"
@@ -26,5 +36,11 @@ class FieldGrid:
     def print_grid(self):
         for row in self.grid:
             print(" | ".join(cell.current_crop or "Empty" for cell in row))
+    
+    def print_nutrients(self):
+        for r, row in enumerate(self.grid):
+            for c, cell in enumerate(row):
+                print(f"[{r},{c}] N={cell.n:.2f}, P={cell.p:.2f}, K={cell.k:.2f}, Crop={cell.current_crop}")
+
 
         

@@ -45,8 +45,8 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
         if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type: 
             
             crops.append(Crop(
-                crop_id = crop[0]["crop_id"],
-                crop_name = crop[0]["crop_name"],
+                id = crop[0]["crop_id"],
+                name = crop[0]["crop_name"],
                 family = crop[0]["family"],
                 is_legume = crop[0]["is_legume"],
                 root_depth_cm = crop[0]["root_depth_cm"],
