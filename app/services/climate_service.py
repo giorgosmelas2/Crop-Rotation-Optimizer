@@ -22,6 +22,7 @@ def get_climate_data(coordinates: Coordinates) -> pd.DataFrame:
     months = [m for m in MONTH_ORDER if m in js["T2M_MIN"]]
 
     df = pd.DataFrame({
+        "month": list(range(1,13)),
         "tmin": [js["T2M_MIN"][m] for m in months],
         "tmax": [js["T2M_MAX"][m] for m in months],
         "rain": [js["PRECTOTCORR"][m] for m in months],

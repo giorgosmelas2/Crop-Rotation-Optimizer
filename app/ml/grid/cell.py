@@ -9,9 +9,9 @@ class Cell:
             k: float,
             ph: float, 
             soil_type: str, 
-            irrigation: float,
-            fertilization: float,
-            spraying: float,
+            irrigation: int,
+            fertilization: int,
+            spraying: int,
             crop_history: List[str] = None,
             pest_pressure: float = 0.0,
             crop=None):

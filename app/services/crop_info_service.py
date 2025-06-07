@@ -39,17 +39,17 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
                 .execute().data
             
         except Exception as e:
-            print(f"Error fetching crop data for {crop[0]["crop_id"]}: {e}")
+            print(f"Error fetching crop data for {crop[0]['crop_id']}: {e}")
             continue
 
         if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type: 
             
             crops.append(Crop(
-                id = crop[0]["crop_id"],
-                name = crop[0]["crop_name"],
-                family = crop[0]["family"],
-                is_legume = crop[0]["is_legume"],
-                root_depth_cm = crop[0]["root_depth_cm"],
+                id=crop[0]["crop_id"],
+                name=crop[0]["crop_name"],
+                family=crop[0]["family"],
+                is_legume=crop[0]["is_legume"],
+                root_depth_cm=crop[0]["root_depth_cm"],
                 etc_mm = crop[0]["etc_mm"],
                 sow_month = crop[0]["sow_month"],
                 harvest_month = crop[0]["harvest_month"],

@@ -9,10 +9,9 @@ from app.ml.core_models.climate import Climate
 from app.ml.grid.field_grid import FieldGrid
 from app.ml.grid.grid_utils import cell_create
 
-from app.ml.simulation_logic.soil_dynamics import update_soil_after_crop
+from app.ml.simulation_logic.effects import update_soil_after_crop
 
-
-def simulate_crop_rotation( field_state: FieldState, climate: Climate, crops: List[Crop], farmer_knowledge: FarmerKnowledge, years: int) -> Dict:
+def simulate_crop_rotation( field_state: FieldState, climate_df: Climate, crops: List[Crop], farmer_knowledge: FarmerKnowledge, years: int) -> Dict:
     # Create a deep copy of the field state to avoid modifying the original
     field = deepcopy(field_state)
 
@@ -21,6 +20,8 @@ def simulate_crop_rotation( field_state: FieldState, climate: Climate, crops: Li
 
     # Create a FieldGrid instance with the created cells
     field_grid = FieldGrid(cells=cells)
+
+    crop_score = 0
 
     total_crops = len(crops)
     current_crop_index = 0

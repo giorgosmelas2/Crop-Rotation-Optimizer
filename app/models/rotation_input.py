@@ -12,9 +12,9 @@ class RotationInfo(BaseModel):
     coordinates: Coordinates
     area: float
     soil_type: str
-    irrigation: float
-    fertilization: float
-    spraying: float
+    irrigation: int
+    fertilization: int
+    spraying: int
     n: float
     p: float
     k: float
