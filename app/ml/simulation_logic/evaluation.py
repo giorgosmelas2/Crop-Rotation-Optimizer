@@ -1,8 +1,28 @@
 import pandas as pd
+from typing import List
 
 from app.ml.core_models.crop import Crop
+from app.ml.core_models.economics import Economics
+from app.ml.grid.field_grid import FieldGrid
 
-def climate_evaluation(climate_df: dict, crop: Crop) -> float:
+from app.ml.grid.cell import Cell
+
+days_in_month = {
+        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
+        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+    }
+
+def climate_evaluation(climate_df: pd.DataFrame, crop: Crop, mode: str) -> float:
+    """
+    Evaluate the suitability of the climate for a given crop based on temperature and rainfall.
+    Args:
+        climate_df (dict): DataFrame containing climate data with columns 'month', 'tmin', 'tmax', and 'rain'.
+        crop (Crop): The crop to evaluate.
+    Returns:
+        float: A score representing the suitability of the climate for the crop.
+    """
+    # Constants
+    TOL = 4  # Tolerance for temperature
 
     total_temperature_score = 0.0
     rain_score = 0.0
@@ -10,28 +30,20 @@ def climate_evaluation(climate_df: dict, crop: Crop) -> float:
     sow = crop.sow_month
     harvest = crop.harvest_month
 
-    if sow <= harvest: 
-        active_temp = climate_df.iloc[sow:harvest][["tmin", "tmax"]]
-    else:
-        active_temp = pd.concat([
-            climate_df.iloc[sow:][["tmin", "tmax"]],
-            climate_df[:harvest][["tmin", "tmax"]]
-        ])
-
-    TOL = 4  # Tolerance for temperature
-    months = len(active_temp)
+    # --- Temperature Evaluation ---
+    active_temp = get_active_temperatures(climate_df, sow, harvest)
 
     # Calculating temperature score
-    t_min_deviation = (crop["t_min"] - active_temp["tmin"]).clip(lower=0)
-    t_max_deviation = (active_temp["tmax"] - crop["t_max"]).clip(lower=0)
+    t_min_deviation = (crop.t_min - active_temp["tmin"]).clip(lower=0)
+    t_max_deviation = (active_temp["tmax"] - crop.t_max).clip(lower=0)
 
     # 1 if temperature is ok, <1 if is a little more, 0 if is not ok
     t_min_score = (1 - (t_min_deviation / TOL)).clip(lower=0)
     t_max_score = (1 - (t_max_deviation / TOL)).clip(lower=0)
 
     # Calculating optimal temperature score
-    t_opt_min_deviation = (crop["t_opt_min"] - active_temp["tmin"]).clip(lower=0)
-    t_opt_max_deviation = (active_temp["tmax"] - crop["t_opt_max"]).clip(lower=0)
+    t_opt_min_deviation = (crop.t_opt_min - active_temp["tmin"]).clip(lower=0)
+    t_opt_max_deviation = (active_temp["tmax"] - crop.t_opt_max).clip(lower=0)
 
     # 1 if temperature is ok, <1 if is a little more, 0 if is not ok
     t_opt_min_score = (1 - (t_opt_min_deviation / TOL)).clip(lower=0)
@@ -45,40 +57,146 @@ def climate_evaluation(climate_df: dict, crop: Crop) -> float:
 
     total_temperature_score = temperature_score + temperature_opt_score
 
-    # Calculating rainfall score
-    if sow <= harvest: 
-        active_rain = climate_df.iloc[sow:harvest][["rain"]]
-    else :
-        active_rain = pd.concat([
-            climate_df.iloc[sow:][["rain"]],
-            climate_df[:harvest][["rain"]]
-        ])
-
-    months = active_rain.index.tolist()
-    for month in months:
-        if month < 7 and month % 2 == 0 and month != 0:
-            active_rain[month] *= 30
-        elif month <= 7 and month % 2 != 0:
-            active_rain[month] *= 31
-        elif month > 7 and month % 2 == 0:
-            active_rain[month] *= 31
-        elif month > 7 and month % 2 != 0:
-            active_rain[month] *= 30    
-        else: 
-            active_rain[month] *= 28
-
-    rain_per_month = crop["rain_min"] / months
-    rain_deviation_percent = (active_rain["rain"] - rain_per_month / rain_per_month) * 100
-    avg_rain_deviation = abs(rain_deviation_percent.mean())
-
-    if avg_rain_deviation <= 0.1:
-        rain_score = 1.0
-    elif avg_rain_deviation <= 0.2:
-        rain_score = 0.9
-    elif avg_rain_deviation <= 0.3:
-        rain_score = 0.8
-    elif avg_rain_deviation <= 0.5:
-        rain_score = 0.4
-    else: 
-        rain_score = 0.0
+    # --- Rain Evaluation ---
+    total_rain = get_total_rain(climate_df, sow, harvest)
     
+    # Calculation the percentage difference from the ideal rain range
+    if crop.rain_min_mm <= total_rain <= crop.rain_max_mm:
+        rain_diff_percent = 0.0
+    elif total_rain < crop.rain_min_mm:
+        rain_diff_percent = (crop.rain_min_mm - total_rain) / crop.rain_min_mm
+    else:
+        rain_diff_percent = (total_rain - crop.rain_max_mm) / crop.rain_max_mm
+
+    # Assigning rain score based on the difference percentage
+    if rain_diff_percent <= 0.1:
+        rain_score = 1.0
+    elif rain_diff_percent <= 0.2:
+        rain_score = 0.9
+    elif rain_diff_percent <= 0.3:
+        rain_score = 0.8
+    elif rain_diff_percent <= 0.5:
+        rain_score = 0.4
+    else:
+        rain_score = 0.0
+
+    # Final score
+    final_score = (total_temperature_score + rain_score) / 2  
+    return final_score
+
+
+def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, climate_df: pd.DataFrame) -> float:
+    """
+    Evaluate the profit potential of a crop based on economic data and field conditions.
+    Args:
+        economic_data (Economics): Economic data for the crop.
+        crop (Crop): The crop to evaluate.
+        field (FieldGrid): The field grid representing the field.
+        climate_df (pd.DataFrame): DataFrame containing climate data with columns 'month', 'tmin', 'tmax', and 'rain'.
+    Returns:
+        float: A score representing the profit potential of the crop.
+    """
+    practice_multipliers = {
+        0: 0.5,
+        1: 0.7,   
+        2: 0.85,  
+        3: 1.0    
+    }
+
+    def nutrient_factor(required, actual):
+        if actual >= required:
+            return 1.0
+        return actual / required
+
+    max_yield = economic_data.kg_yield_per_acre
+    total_yield = 0.0
+    
+    climate_factor = climate_evaluation(climate_df, crop)
+
+    for row in range(field.rows):
+        for col in range(len(field.grid[row])):
+            cell = field.get_cell(row, col)
+
+            practice_factor = (
+                practice_multipliers.get(cell.irrigation, 0.5) *
+                practice_multipliers.get(cell.fertilization, 0.5) *
+                practice_multipliers.get(cell.spraying, 0.5)
+            )
+
+            nutrient_factor_total = (
+                nutrient_factor(crop.n, cell.n) *
+                nutrient_factor(crop.p, cell.p) *
+                nutrient_factor(crop.k, cell.k)
+            )
+
+            actual_yield = max_yield * practice_factor * nutrient_factor_total * climate_factor
+            total_yield += actual_yield
+            cell.yield_ = actual_yield
+    
+    revenue = total_yield * economic_data.tonne_price_sell / 1000  # Convert kg to tonnes
+    cost = (economic_data.unit_price * economic_data.units_per_acre) * field.get_total_area()
+
+    profit = revenue - cost
+   
+    return profit
+
+def farmer_knowledge_evaluation(farmer_knowledge: dict, crop_list: List[Crop]) -> float:
+    """
+    Evaluate the farmer's knowledge based on the crop's requirements and the farmer's knowledge.
+    Args:
+        farmer_knowledge (dict): Dictionary containing the farmer's knowledge about crops.
+        crop_list (List[Crop]): List of crops to evaluate.
+    Returns:
+        float: A score representing the farmer's knowledge for the crop.
+    """
+    knowledge_score = 0.0
+
+    return knowledge_score
+
+
+
+#--- Helper functions that are need from evaluation functions---
+
+def get_active_temperatures(climate_df: pd.Dataframe, sow: int, harvest: int) -> pd.DataFrame: 
+    """
+    Get the active temperatures for the crop's sowing and harvesting months.
+    Args:
+        climate_df (pd.DataFrame): DataFrame containing climate data with columns 'month', 'tmin', and 'tmax'.
+        sow (int): The month when the crop is sown.
+        harvest (int): The month when the crop is harvested.
+    Returns:
+        pd.DataFrame: DataFrame containing the active temperatures for the crop's sowing and harvesting months.
+    """
+    if sow <= harvest:
+        active_months = list(range(sow, harvest + 1))
+    else:
+        active_months = list(range(sow, 13)) + list(range(1, harvest + 1))
+
+    return climate_df[climate_df["month"].isin(active_months)][["tmin", "tmax"]]
+
+
+def get_total_rain(climate_df: pd.DataFrame, sow: int, harvest: int) -> pd.DataFrame:
+    """
+    Get the total rainfall for the crop's sowing and harvesting months. 
+    Args:
+        climate_df (pd.DataFrame): DataFrame containing climate data with columns 'month' and 'rain'.
+        sow (int): The month when the crop is sown.
+        harvest (int): The month when the crop is harvested.
+    Returns:
+        float: Total rainfall in mm
+    """
+    if sow <= harvest:
+        active_months = list(range(sow, harvest + 1))
+    else:
+        active_months = list(range(sow, 13)) + list(range(1, harvest + 1))
+
+    active_rain = climate_df[climate_df["month"].isin(active_months)][["month", "rain"]]
+
+    total_rain = 0.0
+    for _, row in active_rain.iterrows():
+        month = int(row["month"])
+        rain_per_day = row["rain"]
+        total_rain += rain_per_day * days_in_month[month]
+
+    return total_rain
+

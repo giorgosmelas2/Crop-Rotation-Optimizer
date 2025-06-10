@@ -17,7 +17,6 @@ class FieldGrid:
             if 0 <= col < len(self.grid[row]):
                 return self.grid[row][col]
         raise IndexError("Cell coordinates out of bounds")
-
     
     # Adds a crop to the specified cell
     def sow_crop(self, row: int, col: int, name: str):
@@ -27,6 +26,11 @@ class FieldGrid:
     def harvest_crop(self, row: int, col: int):
         self.get_cell(row, col).remove_crop()
 
+    # Returns the total area of the field
+    def get_total_area(self) -> float:
+        return sum(cell.area for row in self.grid for cell in row)
+
+    # Checks if the field is empty (i.e., no crops are currently planted)
     def is_field_empty(self) -> bool:
         return all(cell.current_crop is None for row in self.grid for cell in row)
 

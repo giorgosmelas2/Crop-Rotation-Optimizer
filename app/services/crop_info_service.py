@@ -44,34 +44,36 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
 
         if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type: 
             
-            crops.append(Crop(
-                id=crop[0]["crop_id"],
-                name=crop[0]["crop_name"],
-                family=crop[0]["family"],
-                is_legume=crop[0]["is_legume"],
-                root_depth_cm=crop[0]["root_depth_cm"],
-                etc_mm = crop[0]["etc_mm"],
-                sow_month = crop[0]["sow_month"],
-                harvest_month = crop[0]["harvest_month"],
-                t_min = crop_cliamte[0]["t_min"],
-                t_max = crop_cliamte[0]["t_max"],
-                t_opt_min = crop_cliamte[0]["t_opt_min"],
-                t_opt_max = crop_cliamte[0]["t_opt_max"],
-                rain_min_mm = crop_cliamte[0]["rain_min"],
-                rain_max_mm = crop_cliamte[0]["rain_max"],
-                ph_min = crop_cliamte[0]["ph_min"],
-                ph_max = crop_cliamte[0]["ph_max"],
-                g_min = crop_cliamte[0]["g_min"],
-                g_max = crop_cliamte[0]["g_max"],
-                n = crop_nutrients[0]["n"],
-                p = crop_nutrients[0]["p"],
-                k = crop_nutrients[0]["k"],
-                soil_type = soil_type[0]["soil_name"],
-                residue_fraction = ressidue_returns[0]["residue_fraction"],
-                n_fix = ressidue_returns[0]["n_fix"],
-                n_ret = ressidue_returns[0]["n_ret"],
-                p_ret = ressidue_returns[0]["p_ret"],
-                k_ret = ressidue_returns[0]["k_ret"]
-            ))
+            crops.append(
+                Crop(
+                    id=crop[0]["crop_id"],
+                    name=crop[0]["crop_name"],
+                    family=crop[0]["family"],
+                    is_legume=crop[0]["is_legume"],
+                    root_depth_cm=crop[0]["root_depth_cm"],
+                    etc_mm = crop[0]["etc_mm"],
+                    sow_month = crop[0]["sow_month"],
+                    harvest_month = crop[0]["harvest_month"],
+                    t_min = crop_cliamte[0]["t_min"],
+                    t_max = crop_cliamte[0]["t_max"],
+                    t_opt_min = crop_cliamte[0]["t_opt_min"],
+                    t_opt_max = crop_cliamte[0]["t_opt_max"],
+                    rain_min_mm = crop_cliamte[0]["rain_min"],
+                    rain_max_mm = crop_cliamte[0]["rain_max"],
+                    ph_min = crop_cliamte[0]["ph_min"],
+                    ph_max = crop_cliamte[0]["ph_max"],
+                    g_min = crop_cliamte[0]["g_min"],
+                    g_max = crop_cliamte[0]["g_max"],
+                    n = crop_nutrients[0]["n"],
+                    p = crop_nutrients[0]["p"],
+                    k = crop_nutrients[0]["k"],
+                    soil_type = soil_type[0]["soil_name"],
+                    residue_fraction = ressidue_returns[0]["residue_fraction"],
+                    n_fix = ressidue_returns[0]["n_fix"],
+                    n_ret = ressidue_returns[0]["n_ret"],
+                    p_ret = ressidue_returns[0]["p_ret"],
+                    k_ret = ressidue_returns[0]["k_ret"]
+                )
+            )
             
     return crops

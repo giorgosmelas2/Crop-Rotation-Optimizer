@@ -1,12 +1,17 @@
 from fastapi import APIRouter
+
 from app.models.rotation_input import RotationInfo
 from app.ml.core_models.field_state import FieldState
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
 from app.ml.core_models.climate import Climate
 from app.models.coordinates import Coordinates
+from app.ml.core_models.economics import Economics
+
 from app.ml.simulation import simulate_crop_rotation
+
 from app.services.crop_info_service import fetch_crop_info
 from app.services.climate_service import get_climate_data
+from app.services.economic_service import get_economic_data
 
 router = APIRouter()
 
@@ -36,12 +41,15 @@ async def create_rotation_plan(rotation_info: RotationInfo):
         uneffective_pairs=rotation_info.uneffective_pairs
     )
 
+    # Fetching climate data based on the coordinates provided
     coords = Coordinates(
         lat=rotation_info.coordinates.lat,
         lng=rotation_info.coordinates.lng
     )
-
     climate_df = get_climate_data(coords)
+
+    # Fetching economic data for each crop
+    economic_data = get_economic_data(crops)
 
     rotation_years = rotation_info.years
 
@@ -49,5 +57,6 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     print(f"field: {field}")
     print(f"farmer_knowledge: {farmer_knowledge}")
     print(f"climate_df: {climate_df}")
-    # simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, rotation_years)
+    print(f"economic_data: {economic_data}")
+    # simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, economic_data, rotation_years)
     

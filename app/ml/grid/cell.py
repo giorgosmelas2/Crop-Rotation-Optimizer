@@ -14,7 +14,9 @@ class Cell:
             spraying: int,
             crop_history: List[str] = None,
             pest_pressure: float = 0.0,
-            crop=None):
+            crop=None,
+            yield_: float = 0.0
+        ):
         
         self.area = area
         self.n = n
@@ -26,7 +28,7 @@ class Cell:
         self.fertilization = fertilization
         self.spraying = spraying
         self.current_crop = crop
-        self.yield_ = 0.0
+        self.yield_ = yield_
         self.pest_pressure = pest_pressure
         self.crop_history = crop_history or []
 
@@ -55,3 +57,5 @@ class Cell:
     def remove_crop(self):
         self.current_crop = None
         self.yield_ = 0.0
+
+

@@ -2,6 +2,14 @@ from app.ml.grid.cell import Cell
 from app.ml.core_models.crop import Crop
 
 def update_soil_after_crop(crop: Crop, cell: Cell): 
+    """
+    Update the soil nutrients in a cell after a crop is harvested.
+    Args:
+        crop (Crop): The crop that was harvested.
+        cell (Cell): The cell where the crop was grown.
+    Returns:
+        None: The function modifies the cell's nutrient values in place.
+    """
     # Nutrient subtractions based on the crop's nutrient uptake
     n_subtracted = cell.n - crop.n
     p_subtracted = cell.p - crop.p
