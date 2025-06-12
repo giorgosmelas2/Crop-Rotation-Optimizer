@@ -1,10 +1,7 @@
-from pydantic import BaseModel
 from typing import List
 
-class CropPair(BaseModel):
-    crop1: str
-    crop2: str
-    value: int 
+from app.models.crop_pair import CropPair
+ 
 
 class FarmerKnowledge():
     def __init__(self, effective_pairs: List[CropPair], uneffective_pairs: List[CropPair]):

@@ -3,6 +3,8 @@ from typing import List
 
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
+from app.ml.core_models.farmer_knowledge import FarmerKnowledge
+
 from app.ml.grid.field_grid import FieldGrid
 
 from app.ml.grid.cell import Cell
@@ -12,7 +14,7 @@ days_in_month = {
         7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
     }
 
-def climate_evaluation(climate_df: pd.DataFrame, crop: Crop, mode: str) -> float:
+def climate_evaluation(climate_df: pd.DataFrame, crop: Crop) -> float:
     """
     Evaluate the suitability of the climate for a given crop based on temperature and rainfall.
     Args:
@@ -107,8 +109,10 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, cl
         if actual >= required:
             return 1.0
         return actual / required
+    
+    total_field_area = field.get_total_area()
 
-    max_yield = economic_data.kg_yield_per_acre
+    max_yield = economic_data.kg_yield_per_acre 
     total_yield = 0.0
     
     climate_factor = climate_evaluation(climate_df, crop)
@@ -133,31 +137,61 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, cl
             total_yield += actual_yield
             cell.yield_ = actual_yield
     
-    revenue = total_yield * economic_data.tonne_price_sell / 1000  # Convert kg to tonnes
-    cost = (economic_data.unit_price * economic_data.units_per_acre) * field.get_total_area()
+    revenue = total_yield * economic_data.tonne_price_sell / 1000 # Convert kg to tonnes
+    cost = economic_data.unit_price * economic_data.units_per_acre * total_field_area
 
     profit = revenue - cost
-   
-    return profit
 
-def farmer_knowledge_evaluation(farmer_knowledge: dict, crop_list: List[Crop]) -> float:
+    max_revenue = max_yield * total_field_area * economic_data.tonne_price_sell / 1000 # Convert kg to tonnes
+    max_possible_profit = max_revenue - cost
+
+    if max_possible_profit > 0:
+        normalized_profit = profit / max_possible_profit
+    else:
+        normalized_profit = 0.0
+   
+    return normalized_profit
+
+def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[Crop]) -> float:
     """
     Evaluate the farmer's knowledge based on the crop's requirements and the farmer's knowledge.
     Args:
-        farmer_knowledge (dict): Dictionary containing the farmer's knowledge about crops.
+        farmer_knowledge (FarmerKnowledge): FarmerKnowledge data containing effective and uneffective crop pairs that farmer has observed
         crop_list (List[Crop]): List of crops to evaluate.
     Returns:
         float: A score representing the farmer's knowledge for the crop.
     """
-    knowledge_score = 0.0
+    crop_names = [crop.name for crop in crops]
 
-    return knowledge_score
+    crop_pairs = list(zip(crop_names, crop_names[1:]))
+    effective_pairs = {
+        (pair.crop1, pair.crop2): pair.value
+        for pair in farmer_knowledge.effective_pairs
+
+    }
+    uneffectibe_pairs = {
+        (pair.crop1, pair.crop2): pair.value
+        for pair in farmer_knowledge.uneffective_pairs
+    }
+
+    score = 0 
+    for pair in crop_pairs: 
+        if pair in effective_pairs:
+            score += effective_pairs[pair]
+        elif pair in uneffectibe_pairs:
+            score += uneffectibe_pairs[pair]
+
+    max_score_possible = len(crop_pairs) * 3  
+    normalized_score = (score + max_score_possible) / (2 * max_score_possible)
+
+
+    return normalized_score
 
 
 
 #--- Helper functions that are need from evaluation functions---
 
-def get_active_temperatures(climate_df: pd.Dataframe, sow: int, harvest: int) -> pd.DataFrame: 
+def get_active_temperatures(climate_df: pd.DataFrame, sow: int, harvest: int) -> pd.DataFrame: 
     """
     Get the active temperatures for the crop's sowing and harvesting months.
     Args:

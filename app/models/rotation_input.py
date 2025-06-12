@@ -1,11 +1,8 @@
 from pydantic import BaseModel
 from typing import List
-from app.models.coordinates import Coordinates
 
-class CropPair(BaseModel):
-    crop1: str
-    crop2: str
-    value: int
+from app.models.coordinates import Coordinates
+from app.models.crop_pair import CropPair
 
 class RotationInfo(BaseModel): 
     crops: List[str]

@@ -11,11 +11,10 @@ from app.ml.grid.field_grid import FieldGrid
 from app.ml.grid.grid_utils import cell_create
 
 from app.ml.simulation_logic.effects import update_soil_after_crop
-from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation
+from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation, farmer_knowledge_evaluation
 
 # Weights for the evaluation scores
-CLIMATE_WEIGHT = 10000
-FARMER_KNOWLEDGE_WEIGHT = 30000
+
 
 def simulate_crop_rotation( 
         field_state: FieldState, 
@@ -40,6 +39,10 @@ def simulate_crop_rotation(
     total_crops = len(crops)
     current_crop_index = 0
 
+    farmer_knowledge_score = farmer_knowledge_evaluation(farmer_knowledge, crops)
+
+    total_score += farmer_knowledge_score
+
     for year in range(years):
         print(f"---Year {year + 1}---")
         # Stop simulation if all crops have been processed
@@ -55,7 +58,7 @@ def simulate_crop_rotation(
                 print(f"Sowing {crop.name} in all cells.")
             
                 # Evaluate climate suitability for the crop
-                climate_score = climate_evaluation(climate_df, crop) * CLIMATE_WEIGHT
+                climate_score = climate_evaluation(climate_df, crop) 
                 print(f"Climate suitability score for {crop.name}: {climate_score:.2f}")
 
                 for row in range(field_grid.rows):
@@ -84,8 +87,7 @@ def simulate_crop_rotation(
                     print("All crops have been sown and harvested.")
                     break
 
-        print("Updated cell states:")
-        field_grid.print_nutrients()
+    print("Total score: ", total_score)
    
     
     
