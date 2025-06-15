@@ -1,5 +1,6 @@
 from typing import List
 from app.ml.grid.cell import Cell
+from app.ml.core_models.crop import Crop
 
 class FieldGrid: 
     def __init__(self, cells: List[Cell]):
@@ -19,8 +20,8 @@ class FieldGrid:
         raise IndexError("Cell coordinates out of bounds")
     
     # Adds a crop to the specified cell
-    def sow_crop(self, row: int, col: int, name: str):
-        self.get_cell(row, col).apply_crop(name)
+    def sow_crop(self, row: int, col: int, crop: Crop):
+        self.get_cell(row, col).apply_crop(crop)
 
     # Removes the crop from the specified cell
     def harvest_crop(self, row: int, col: int):

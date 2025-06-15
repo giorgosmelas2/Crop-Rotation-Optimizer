@@ -38,19 +38,30 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
                 .eq("soil_id", soil_id[0]["soil_id"]) \
                 .execute().data
             
+            pest_id = supabase.table("crop_pests") \
+                .select("pest_id") \
+                .eq("crop_id", crop[0]["crop_id"]) \
+                .execute().data
+            
+            pest_name = supabase.table("pests") \
+                .select("pest_name") \
+                .eq("pest_id", pest_id[0]["pest_id"]) \
+                .execute().data
+            
         except Exception as e:
             print(f"Error fetching crop data for {crop[0]['crop_id']}: {e}")
             continue
 
-        if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type: 
+        if crop and crop_cliamte and crop_nutrients and ressidue_returns and soil_type and pest_name: 
             
             crops.append(
                 Crop(
-                    id=crop[0]["crop_id"],
-                    name=crop[0]["crop_name"],
-                    family=crop[0]["family"],
-                    is_legume=crop[0]["is_legume"],
-                    root_depth_cm=crop[0]["root_depth_cm"],
+                    id = crop[0]["crop_id"],
+                    name = crop[0]["crop_name"],
+                    family = crop[0]["family"],
+                    order = crop[0]["order"],
+                    is_legume = crop[0]["is_legume"],
+                    root_depth_cm = crop[0]["root_depth_cm"],
                     etc_mm = crop[0]["etc_mm"],
                     sow_month = crop[0]["sow_month"],
                     harvest_month = crop[0]["harvest_month"],
@@ -72,7 +83,8 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
                     n_fix = ressidue_returns[0]["n_fix"],
                     n_ret = ressidue_returns[0]["n_ret"],
                     p_ret = ressidue_returns[0]["p_ret"],
-                    k_ret = ressidue_returns[0]["k_ret"]
+                    k_ret = ressidue_returns[0]["k_ret"],
+                    main_pest = pest_name[0]["pest_name"]
                 )
             )
             

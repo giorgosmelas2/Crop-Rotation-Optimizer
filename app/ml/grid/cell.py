@@ -1,4 +1,5 @@
 from typing import List
+from app.ml.core_models.crop import Crop
 
 class Cell:
     def __init__(
@@ -14,7 +15,7 @@ class Cell:
             spraying: int,
             crop_history: List[str] = None,
             pest_pressure: float = 0.0,
-            crop=None,
+            crop: Crop = None,
             yield_: float = 0.0
         ):
         
@@ -44,14 +45,14 @@ class Cell:
             f"fertilization={self.fertilization}",
             f"spraying={self.spraying}",
             f"crop_history={self.crop_history}",
-            f"crop={self.current_crop}", 
+            f"crop={self.current_crop.name}", 
             f"yield_={self.yield_}", 
             f"pest_pressure={self.pest_pressure}",
             ]) + "\n)"
     
-    def apply_crop(self, crop_name: str):
-        self.current_crop = crop_name
-        self.crop_history.append(crop_name)
+    def apply_crop(self, crop: Crop):
+        self.current_crop = crop.name
+        self.crop_history.append(crop.name)
         self.yield_ = 0.0 # Reset yield when applying a new crop
 
     def remove_crop(self):

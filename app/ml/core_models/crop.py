@@ -4,6 +4,7 @@ class Crop:
             id: int,
             name: str,
             family: str,
+            order: str,
             is_legume: bool,
             root_depth_cm: int,
             etc_mm: int,
@@ -28,11 +29,13 @@ class Crop:
             n_ret: float,
             p_ret: float,
             k_ret: float,
-            ):
+            pest: str
+        ):
         
         self.id = id
         self.name = name
         self.family = family
+        self.order = order,
         self.is_legume = is_legume
         self.root_depth_cm = root_depth_cm
         self.etc_mm = etc_mm
@@ -57,6 +60,7 @@ class Crop:
         self.n_ret = n_ret
         self.p_ret = p_ret
         self.k_ret = k_ret
+        self.pest = pest
 
 
     def __repr__(self):
@@ -64,6 +68,7 @@ class Crop:
             f"crop_id: {self.id}",
             f"crop_name: {self.name}",
             f"family: {self.family}",
+            f"order: {self.order}",
             f"is_legume: {self.is_legume}",
             f"root_depth_cm: {self.root_depth_cm}",
             f"etc_mm: {self.etc_mm}",
@@ -88,13 +93,15 @@ class Crop:
             f"n_ret: {self.n_ret}",
             f"p_ret: {self.p_ret}",
             f"k_ret: {self.k_ret}",
+            f"pest: {self.pest}",
         ]) + "\n)"
         
     def __str__(self):
         return "Crop(\n" + "\n".join([
-            f"crop_id: {self.crop_id}",
-            f"crop_name: {self.crop_name}",
+            f"crop_id: {self.id}",
+            f"crop_name: {self.name}",
             f"family: {self.family}",
+            f"order: {self.order}",
             f"is_legume: {self.is_legume}",
             f"root_depth_cm: {self.root_depth_cm}",
             f"etc_mm: {self.etc_mm}",
@@ -119,4 +126,5 @@ class Crop:
             f"n_ret: {self.n_ret}",
             f"p_ret: {self.p_ret}",
             f"k_ret: {self.k_ret}",
+            f"pest: {self.pest}",
         ]) + "\n)"

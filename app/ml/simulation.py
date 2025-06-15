@@ -13,8 +13,6 @@ from app.ml.grid.grid_utils import cell_create
 from app.ml.simulation_logic.effects import update_soil_after_crop
 from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation, farmer_knowledge_evaluation
 
-# Weights for the evaluation scores
-
 
 def simulate_crop_rotation( 
         field_state: FieldState, 
@@ -65,15 +63,15 @@ def simulate_crop_rotation(
                     for col in range(len(field_grid.grid[row])):
                         field_grid.sow_crop(row, col, crop.name)
 
+            # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
+
+            elif month == crops[current_crop_index].harvest_month and not field_grid.is_field_empty():
                 # Evaluate total profit
                 yield_score = profit_evaluation(economic_data[current_crop_index], crop, field_grid, climate_df)
                 print(f"Profit potential score for {crop.name}: {yield_score:.2f}")
 
                 total_score += climate_score + yield_score
 
-            # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
-
-            elif month == crops[current_crop_index].harvest_month and not field_grid.is_field_empty():
                 print(f"Harvesting {crops[current_crop_index].name} in all cells.")
                 for row in range(field_grid.rows):
                     for col in range(len(field_grid.grid[row])):
