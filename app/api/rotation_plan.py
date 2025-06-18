@@ -51,6 +51,8 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     # Fetching economic data for each crop
     economic_data = get_economic_data(crops)
 
+    missing_machinery = rotation_info.machinery
+
     rotation_years = rotation_info.years
 
     print(f"crops: {crops}")
@@ -58,5 +60,5 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     print(f"farmer_knowledge: {farmer_knowledge}")
     print(f"climate_df: {climate_df}")
     print(f"economic_data: {economic_data}")
-    simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, economic_data, rotation_years)
+    simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, economic_data, missing_machinery, rotation_years)
     

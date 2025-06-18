@@ -137,6 +137,18 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, cl
             total_yield += actual_yield
             cell.yield_ = actual_yield
     
+    # Soil type adjustment
+    if crop.soil_type != cell.soil_type:
+        actual_yield *= 0.85  
+
+    # pH adjustment
+    ph_tolerance = 0.5 
+    if not crop.ph_min <= cell.ph <= crop.ph_max:
+        ph_difference = max(crop.ph_min - cell.ph, cell.ph - crop.ph_max, 0)
+        
+        if ph_difference > ph_tolerance:
+            actual_yield *= 0.8 
+    
     revenue = total_yield * economic_data.tonne_price_sell / 1000 # Convert kg to tonnes
     cost = economic_data.unit_price * economic_data.units_per_acre * total_field_area
 
@@ -187,6 +199,44 @@ def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[C
 
     return normalized_score
 
+
+def machinery_evaluation(required_machinery: list[str], missing_machinery: list[str]) -> float:
+    for machinery in required_machinery:
+        if machinery in missing_machinery:
+            return 0.0
+        
+    return 1.0
+
+def crop_rotation_evaluation(crops: list[Crop]) -> float:
+    root_score = 0.0
+
+    #--- Root depth alternation ---
+    alternation_count = 0
+    for prev, curr in zip(crops, crops[1:]):
+        if abs(prev.root_depth_cm - curr.root_depth_cm) >= 30:
+            alternation_count += 1
+    
+    root_score = alternation_count / (len(crops) - 1)
+
+    #--- Legume bonus ---
+    non_legume_streak = 0
+    violations = 0
+    for crop in crops:
+        if crop.is_legume:
+            non_legume_streak = 0
+        else:
+            non_legume_streak += 1
+            if non_legume_streak >= 3:
+                violations += 1
+                non_legume_streak = 0
+
+    
+    max_violations = len(crops) // 3 or 1
+    legume_score = max(0.0, 1.0 - (violations / max_violations))   
+        
+    
+    final_score = 0.3 * root_score + 0.7 * legume_score
+    return final_score
 
 
 #--- Helper functions that are need from evaluation functions---

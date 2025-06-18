@@ -67,13 +67,29 @@ class PestAgent:
     
     def apply_effects(self, cell: Cell):
         """
-        Effects the cell increasing the pest_pressure
+        Increases pest pressure in the cell, considering crop susceptibility and spraying level.
         """
         crop = cell.current_crop
+        if not crop:
+            return
+        
         if crop.name in self.affected_crops:
-            cell.pest_pressure = min(cell.pest_pressure + 0.15, 1.0)
+            base_increase = 0.15
         elif crop.family in self.affected_families:
-            cell.pest_pressure = min(cell.pest_pressure + 0.08, 1.0)
+            base_increase = 0.08
+
+        spraying_level = cell.spraying
+        spraying_effect = {
+            0: 1.0,
+            1: 0.6,
+            2: 0.3,
+            3: 0.1
+        }
+
+        spraying_factor = spraying_effect.get(spraying_level, 1.0)
+        final_increase = base_increase * spraying_factor
+
+        cell.pest_pressure = min(cell.pest_pressure + final_increase, 1.0)
 
 
     def decay(self, field: FieldGrid):
@@ -89,8 +105,17 @@ class PestAgent:
                 crop_family = crop.family
 
                 if crop_name not in self.affected_crops and crop_family not in self.affected_families:
-                    cell.pest_pressure = max(cell.pest_pressure - self.decay_rate, 0.0)
+                    spraying_bonus = {
+                    0: 0.0,
+                    1: 0.02,
+                    2: 0.05,
+                    3: 0.1
+                }
+                spraying_level = cell.spraying
+                extra_decay = spraying_bonus.get(spraying_level, 0.0)
+                total_decay = self.decay_rate + extra_decay
 
+                cell.pest_pressure = max(cell.pest_pressure - total_decay, 0.0)
         
     def __repr__(self):
         return f"<PestAgent {self.name}>"
