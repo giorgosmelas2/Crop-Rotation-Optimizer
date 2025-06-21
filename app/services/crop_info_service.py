@@ -84,7 +84,7 @@ def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
                     n_ret = ressidue_returns[0]["n_ret"],
                     p_ret = ressidue_returns[0]["p_ret"],
                     k_ret = ressidue_returns[0]["k_ret"],
-                    main_pest = pest_name[0]["pest_name"]
+                    pest = pest_name[0]["pest_name"]
                 )
             )
             

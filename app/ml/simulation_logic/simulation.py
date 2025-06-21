@@ -26,7 +26,7 @@ def simulate_crop_rotation(
         economic_data: list[Economics],
         missing_machinery: list[str],
         years: int
-    ) -> Dict:
+    ) -> float:
 
     # Create a deep copy of the field state to avoid modifying the original
     field = deepcopy(field_state)
@@ -108,6 +108,8 @@ def simulate_crop_rotation(
     )
 
     print("Total score: ", total_score)
+
+    return total_score
    
     
     

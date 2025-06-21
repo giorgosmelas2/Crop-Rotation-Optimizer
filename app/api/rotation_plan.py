@@ -7,11 +7,11 @@ from app.ml.core_models.climate import Climate
 from app.models.coordinates import Coordinates
 from app.ml.core_models.economics import Economics
 
-from app.ml.simulation import simulate_crop_rotation
-
 from app.services.crop_info_service import fetch_crop_info
 from app.services.climate_service import get_climate_data
 from app.services.economic_service import get_economic_data
+
+from app.ml.optimization.run_optimizer import optimize_rotation_plan
 
 router = APIRouter()
 
@@ -60,5 +60,15 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     print(f"farmer_knowledge: {farmer_knowledge}")
     print(f"climate_df: {climate_df}")
     print(f"economic_data: {economic_data}")
-    simulate_crop_rotation(field, climate_df, crops, farmer_knowledge, economic_data, missing_machinery, rotation_years)
-    
+
+    best_rotation, score = optimize_rotation_plan(
+        crops=crops,
+        field_state=field,
+        climate_df=climate_df,
+        farmer_knowledge=farmer_knowledge,
+        economic_data=economic_data,
+        missing_machinery=missing_machinery,
+        years=rotation_years
+    )
+
+    print(f"Best rotation: {best_rotation}\nScore: {score}")
