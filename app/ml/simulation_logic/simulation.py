@@ -11,7 +11,7 @@ from app.ml.grid.field_grid import FieldGrid
 from app.ml.grid.grid_utils import cell_create
 
 from app.ml.simulation_logic.effects import update_soil_after_crop
-from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation, farmer_knowledge_evaluation, machinery_evaluation, crop_rotation_evaluation
+from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation, farmer_knowledge_evaluation, machinery_evaluation, crop_rotation_evaluation, beneficial_rotations_evaluation
 
 from app.agents.pest_simulation import PestSimulationManager
 
@@ -25,6 +25,7 @@ def simulate_crop_rotation(
         farmer_knowledge: FarmerKnowledge, 
         economic_data: list[Economics],
         missing_machinery: list[str],
+        past_crops: list[str],
         years: int
     ) -> float:
 
@@ -45,7 +46,8 @@ def simulate_crop_rotation(
     total_crops = len(crops)
     current_crop_index = 0
 
-    farmer_knowledge_score = farmer_knowledge_evaluation(farmer_knowledge, crops)
+    farmer_knowledge_score = farmer_knowledge_evaluation(farmer_knowledge, crops, past_crops)
+    beneficial_rotations_score = beneficial_rotations_evaluation(crops, past_crops)
     crop_rotation_score = crop_rotation_evaluation(crops)
     
     crops_required_machinery = get_required_machinery([crop.id for crop in crops])

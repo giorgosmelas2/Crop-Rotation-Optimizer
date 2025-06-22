@@ -125,6 +125,7 @@ def run_ga_custom(
         farmer_knowledge,
         economic_data,
         missing_machinery,
+        past_crops,
         rotation_length,
         population_size=30,
         generations=25,
@@ -136,7 +137,7 @@ def run_ga_custom(
     
     fitness_scores = []
     for individual in population:
-        individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, years)
+        individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, past_crops, rotation_length)
         fitness_scores.append(individual_score)
 
     best_individual = population[fitness_scores.index(max(fitness_scores))]

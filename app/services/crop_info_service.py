@@ -1,10 +1,10 @@
 from app.services.supabase_client import supabase
 from app.ml.core_models.crop import Crop
-from typing import List
+
 
 # Fetching the crop information from the Supabase database
-def fetch_crop_info(crop_names: List[str]) -> List[Crop]:
-    crops: List[Crop] = []
+def fetch_crop_info(crop_names: list[str]) -> list[Crop]:
+    crops: list[Crop] = []
     for crop_name in crop_names:
         print("Fetching data for crop:", crop_name)
         try:

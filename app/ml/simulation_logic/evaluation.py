@@ -7,6 +7,8 @@ from app.ml.core_models.farmer_knowledge import FarmerKnowledge
 
 from app.ml.grid.field_grid import FieldGrid
 
+from app.services.beneficial_rotations_service import get_beneficial_rotations
+
 days_in_month = {
         1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
         7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
@@ -167,7 +169,7 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, cl
    
     return normalized_profit
 
-def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[Crop]) -> float:
+def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[Crop], past_crops: list[str]) -> float:
     """
     Evaluate the farmer's knowledge based on the crop's requirements and the farmer's knowledge.
     Args:
@@ -176,7 +178,7 @@ def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[C
     Returns:
         float: A score representing the farmer's knowledge for the crop.
     """
-    crop_names = [crop.name for crop in crops]
+    crop_names = past_crops + [crop.name for crop in crops]
 
     crop_pairs = list(zip(crop_names, crop_names[1:]))
     effective_pairs = {
@@ -239,6 +241,25 @@ def crop_rotation_evaluation(crops: list[Crop]) -> float:
     
     final_score = 0.3 * root_score + 0.7 * legume_score
     return final_score
+
+def beneficial_rotations_evaluation(crops: list[Crop], past_crops: list[str]) -> float:
+    beneficial_rotations = get_beneficial_rotations()
+    crop_names = past_crops + [crop.name for crop in crops]
+    total_benefial_sequences = 0
+    total_windows = 0
+
+    for rotation in beneficial_rotations:
+        rot_len = len(rotation)
+        max_start = len(crop_names) - rot_len + 1
+        total_windows += max(0, max_start)
+        for i in range(max_start):
+            if crop_names[i:i + rot_len] == rotation:
+                total_benefial_sequences += 1
+
+    if total_windows == 0:
+        return 0.0
+
+    return total_benefial_sequences / total_windows
 
 
 #--- Helper functions that are need from evaluation functions---

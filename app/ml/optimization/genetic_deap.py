@@ -37,7 +37,16 @@ toolbox.register("mutate", mutate_individual, all_crops=None)  # to be set at ru
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", evaluate_individual)  # wrapped at runtime
 
-def run_ga_deap(crops, field_state, climate_df, farmer_knowledge, economic_data, missing_machinery, years):
+def run_ga_deap(
+        crops, 
+        field_state, 
+        climate_df, 
+        farmer_knowledge, 
+        economic_data, 
+        missing_machinery, 
+        past_crops, 
+        years
+    ):
     toolbox.unregister("mutate")  # Reset in case
     toolbox.register("mutate", mutate_individual, all_crops=crops)
 
