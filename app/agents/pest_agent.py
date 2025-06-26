@@ -7,8 +7,6 @@ class PestAgent:
             name: str,
             affected_crops: list[str],
             affected_families: list[str],
-            row: int,
-            col: int,
             lifespan: int = 3,
             spread_rate_same_family: float = 0.3,
             spread_rate_other: float = 0.1,
@@ -18,10 +16,7 @@ class PestAgent:
             self.affected_crops = affected_crops
             self.affected_families = affected_families
 
-            self.row = row 
-            self.col = col
             self.lifespan = lifespan
-
             self.spread_rate_same_family = spread_rate_same_family
             self.spread_rate_other = spread_rate_other
             self.decay_rate = decay_rate
@@ -36,7 +31,6 @@ class PestAgent:
          if current_crop_name not in self.affected_crops and current_crop_family not in self.affected_families:
             self.lifespan -= 1
 
-    
     def spread(self, field: FieldGrid, max_rows, max_cols) -> list:
         """
         Returns a list with the positions where the agent can spread

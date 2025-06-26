@@ -35,7 +35,7 @@ class Crop:
         self.id = id
         self.name = name
         self.family = family
-        self.order = order,
+        self.order = order
         self.is_legume = is_legume
         self.root_depth_cm = root_depth_cm
         self.etc_mm = etc_mm

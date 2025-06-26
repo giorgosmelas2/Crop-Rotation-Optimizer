@@ -17,11 +17,10 @@ def initialize_population(crops: list[Crop], population_size, rotation_length) -
     Returns:
         List[List[Crop]]: A list of individuals, each being a list of Crop objects.
     """
-
     population = []
 
     for _ in range(population_size):
-        individual = random.choice(crops, k=rotation_length*2)
+        individual = random.choices(crops, k=rotation_length*2)
         population.append(individual)
 
     return population
@@ -37,7 +36,6 @@ def crossover(parent1: list[Crop], parent2: list[Crop]) -> tuple[list[Crop], lis
     Returns:
         Tuple[List[Crop], List[Crop]]: Two offspring.
     """
-
     rotation_length = len(parent1)
     cut_point = random.randint(1, rotation_length - 1)
 
@@ -120,24 +118,25 @@ def select_parents(population, fitness_scores, method="tournament", tournament_s
 
 def run_ga_custom(
         crops,
+        pest_manager,
         field_state,
         climate_df,
         farmer_knowledge,
         economic_data,
         missing_machinery,
         past_crops,
-        rotation_length,
+        years,
         population_size=30,
         generations=25,
         crossover_rate=0.7,
         mutation_rate=0.2,
         selection_method="tournament"
 ):
-    population = initialize_population(crops, population_size, rotation_length)
+    population = initialize_population(crops, population_size, years)
     
     fitness_scores = []
     for individual in population:
-        individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, past_crops, rotation_length)
+        individual_score = simulate_crop_rotation(field_state, climate_df, individual, pest_manager, farmer_knowledge, economic_data, missing_machinery, past_crops, years)
         fitness_scores.append(individual_score)
 
     best_individual = population[fitness_scores.index(max(fitness_scores))]
@@ -166,7 +165,7 @@ def run_ga_custom(
         population = new_population[:population_size]
         fitness_scores = []
         for individual in population:
-            individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, years)
+            individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, rotation_length)
             fitness_scores.append(individual_score) 
         
         gen_best_score = max(fitness_scores)

@@ -1,13 +1,17 @@
 from fastapi import APIRouter
 
-from app.models.rotation_input import RotationInfo
 from app.ml.core_models.field_state import FieldState
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
+
+from app.agents.pest_simulation import PestSimulationManager
+
 from app.models.coordinates import Coordinates
+from app.models.rotation_input import RotationInfo
 
 from app.services.crop_info_service import fetch_crop_info
 from app.services.climate_service import get_climate_data
 from app.services.economic_service import get_economic_data
+from app.services.pest_service import create_pest_agent
 
 from app.ml.optimization.run_optimizer import optimize_rotation_plan
 
@@ -18,6 +22,10 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     # Fetching crops' informations
     crops = fetch_crop_info(rotation_info.crops)
+
+    # Creating the pest agents of crops
+    pest_agents = create_pest_agent(crops)
+    pest_manager = PestSimulationManager(pest_agents)
 
     # Creating a FiedlState instance from the farmer's input
     field = FieldState(
@@ -54,17 +62,19 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     rotation_years = rotation_info.years
 
-    print(f"crops: {crops}")
-    print(f"field: {field}")
-    print(f"farmer_knowledge: {farmer_knowledge}")
-    print(f"climate_df: {climate_df}")
-    print(f"economic_data: {economic_data}")
+    # print(f"crops: {crops}")
+    # print(f"field: {field}")
+    # print(f"farmer_knowledge: {farmer_knowledge}")
+    # print(f"climate_df: {climate_df}")
+    # print(f"economic_data: {economic_data}")
 
     best_rotation, score = optimize_rotation_plan(
         crops=crops,
+        pest_manager=pest_manager,
         field_state=field,
         climate_df=climate_df,
         farmer_knowledge=farmer_knowledge,
+        economic_data= economic_data,
         missing_machinery=missing_machinery,
         past_crops=rotation_info.past_crops,
         years=rotation_years

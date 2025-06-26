@@ -22,6 +22,7 @@ def simulate_crop_rotation(
         field_state: FieldState, 
         climate_df: Climate, 
         crops: list[Crop], 
+        pest_manager: PestSimulationManager,
         farmer_knowledge: FarmerKnowledge, 
         economic_data: list[Economics],
         missing_machinery: list[str],
@@ -38,9 +39,6 @@ def simulate_crop_rotation(
     # Initialize the FieldGrid with the created cells
     field_grid = FieldGrid(cells=cells)
 
-    pest_agents = create_pest_agent([crop.name for crop in crops])
-    pest_manager = PestSimulationManager(pest_agents)
-
     total_score = 0.0
 
     total_crops = len(crops)
@@ -50,7 +48,13 @@ def simulate_crop_rotation(
     beneficial_rotations_score = beneficial_rotations_evaluation(crops, past_crops)
     crop_rotation_score = crop_rotation_evaluation(crops)
     
-    crops_required_machinery = get_required_machinery([crop.id for crop in crops])
+    crops_required_machinery = get_required_machinery(crops)
+
+    total_yield_score = 0.0
+    total_climate_score = 0.0
+    total_machinery_score = 0.0
+
+    num_evaluated_crops = 0
 
     for year in range(years):
         print(f"---Year {year + 1}---")  
@@ -66,26 +70,26 @@ def simulate_crop_rotation(
 
             # Sowing: If it's the sowing month and the field is empty, sow the crop in all cells
             if month == crop.sow_month and field_grid.is_field_empty():
+                num_evaluated_crops += 1
+
                 print(f"Sowing {crop.name} in all cells.")
                 for row in range(field_grid.rows):
                     for col in range(len(field_grid.grid[row])):
-                        field_grid.sow_crop(row, col, crop.name)
+                        field_grid.sow_crop(row, col, crop)
 
                 # Evaluate climate suitability for the crop
                 climate_score = climate_evaluation(climate_df, crop)
+                total_climate_score += climate_score
                 print(f"Climate suitability score for {crop.name}: {climate_score:.2f}")
                     
                 # Missing machinery evaluation
                 machinery_score = machinery_evaluation(crops_required_machinery[current_crop_index], missing_machinery)
-            
-            if not field_grid.is_field_empty():
-                pest_manager.step(field_grid)
-
+                total_machinery_score += machinery_score
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
-
             elif month == crop.harvest_month and not field_grid.is_field_empty():
                 # Evaluate total profit
                 yield_score = profit_evaluation(economic_data[current_crop_index], crop, field_grid, climate_df)
+                total_yield_score += yield_score
                 print(f"Profit potential score for {crop.name}: {yield_score:.2f}")
 
 
@@ -101,12 +105,21 @@ def simulate_crop_rotation(
                 if current_crop_index >= total_crops :
                     print("All crops have been sown and harvested.")
                     break
+            
+            if not field_grid.is_field_empty():
+                    pest_manager.step(field_grid)
+    
+    final_yield_score = total_yield_score / num_evaluated_crops
+    final_climate_score = total_climate_score / num_evaluated_crops
+    final_machinery_score = total_machinery_score / num_evaluated_crops
+    
     total_score = (
-        0.45 * yield_score +
-        0.25 * farmer_knowledge_score + 
-        0.12 * farmer_knowledge_score + 
+        0.4 * final_yield_score +
+        0.19 * farmer_knowledge_score + 
+        0.12 * beneficial_rotations_score + 
+        0.11 * final_climate_score +
         0.1 * crop_rotation_score + 
-        0.08 * machinery_score
+        0.08 * final_machinery_score
     )
 
     print("Total score: ", total_score)

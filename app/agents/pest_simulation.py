@@ -7,6 +7,34 @@ class PestSimulationManager:
         self.pest_agents = pest_agents
         self.agents_by_name = {agent.name: agent for agent in pest_agents}
 
+    def initialize_pest_pressure(self, field: FieldGrid, past_crops: list[Crop], next_crops: list[Crop]):
+        """
+        Adjust pest pressure based on the past crops planted by the user,
+        simulating pre-existing pest presence.
+        """
+        first_crop_agent_name = next_crops[0].pest
+        secont_crop_agent_name = next_crops[1].pest
+
+        first_agent = self.agents_by_name.get(first_crop_agent_name)
+        second_agent = self.agents_by_name.get(secont_crop_agent_name)
+
+        increase = 0.0
+        for idx, past_crop in enumerate(past_crops):
+            if idx == 0: 
+                target_agent = (first_agent,)
+            else:
+                target_agent = (first_agent, second_agent)
+
+            for agent in target_agent:
+                if past_crop.name in agent.affected_crops:
+                    increase += 0.05 if idx else 0.03
+                if past_crop.family in agent.affected_families:
+                    increase += 0.03 if idx else 0.02
+
+        for row in range(field.rows):
+            for col in range(len(field.grid[row])):
+                cell = field.get_cell(row, col)
+                cell.pest_pressure += increase
 
     def step(self, field: FieldGrid):
         for row in range(field.rows):

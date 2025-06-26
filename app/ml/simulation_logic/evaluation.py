@@ -178,7 +178,8 @@ def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[C
     Returns:
         float: A score representing the farmer's knowledge for the crop.
     """
-    crop_names = past_crops + [crop.name for crop in crops]
+    last_crop = past_crops[-1]
+    crop_names = [last_crop] + [crop.name for crop in crops]
 
     crop_pairs = list(zip(crop_names, crop_names[1:]))
     effective_pairs = {
@@ -244,7 +245,8 @@ def crop_rotation_evaluation(crops: list[Crop]) -> float:
 
 def beneficial_rotations_evaluation(crops: list[Crop], past_crops: list[str]) -> float:
     beneficial_rotations = get_beneficial_rotations()
-    crop_names = past_crops + [crop.name for crop in crops]
+    last_crop = past_crops[-1] # Only the last crop
+    crop_names = [last_crop] + [crop.name for crop in crops]
     total_benefial_sequences = 0
     total_windows = 0
 

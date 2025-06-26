@@ -1,5 +1,6 @@
 def optimize_rotation_plan(
     crops,
+    pest_manager,
     field_state,
     climate_df,
     farmer_knowledge,
@@ -13,6 +14,7 @@ def optimize_rotation_plan(
         from app.ml.optimization.genetic_deap import run_ga_deap
         best, score, log = run_ga_deap(
             crops, 
+            pest_manager,
             field_state, 
             climate_df,
             farmer_knowledge, 
@@ -25,6 +27,7 @@ def optimize_rotation_plan(
         from app.ml.optimization.genetic_custom import run_ga_custom
         best, score, log = run_ga_custom(
             crops, 
+            pest_manager,
             field_state, 
             climate_df,
             farmer_knowledge, 

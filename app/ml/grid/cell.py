@@ -51,7 +51,7 @@ class Cell:
             ]) + "\n)"
     
     def apply_crop(self, crop: Crop):
-        self.current_crop = crop.name
+        self.current_crop = crop
         self.crop_history.append(crop.name)
         self.yield_ = 0.0 # Reset yield when applying a new crop
 
