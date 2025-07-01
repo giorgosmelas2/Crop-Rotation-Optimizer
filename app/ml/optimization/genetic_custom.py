@@ -1,5 +1,5 @@
 import random
-from deap import base, creator, tools, algorithms
+import statistics
 from app.ml.core_models.crop import Crop
 from app.ml.simulation_logic.simulation import simulate_crop_rotation 
 
@@ -124,28 +124,58 @@ def run_ga_custom(
         farmer_knowledge,
         economic_data,
         missing_machinery,
+        crops_required_machinery,
         past_crops,
         years,
-        population_size=30,
-        generations=25,
+        population_size=5,
+        generations=10,
         crossover_rate=0.7,
         mutation_rate=0.2,
         selection_method="tournament"
-):
+    ):
     population = initialize_population(crops, population_size, years)
     
+    # Stats for plots
+    gens_best_fitness = []
+    avg_fitness = []
+    variance_per_gen = []
+
     fitness_scores = []
+    population_stats = []
     for individual in population:
-        individual_score = simulate_crop_rotation(field_state, climate_df, individual, pest_manager, farmer_knowledge, economic_data, missing_machinery, past_crops, years)
+        individual_score = simulate_crop_rotation(
+            field_state, 
+            climate_df, 
+            individual, 
+            pest_manager, 
+            farmer_knowledge, 
+            economic_data,
+            missing_machinery, 
+            crops_required_machinery,
+            past_crops, 
+            years
+        )
         fitness_scores.append(individual_score)
+        # population_stats.append(individual_stats)
 
-    best_individual = population[fitness_scores.index(max(fitness_scores))]
-    best_score = max(fitness_scores)
+    idx = fitness_scores.index(max(fitness_scores))
+    best_score = fitness_scores[idx]
+    best_individual = population[idx]
+    # best_individual_stats = population_stats[idx]
 
+    gens_best_fitness.append(best_score)
+
+    gen_avg_fitness = sum(fitness_scores) / len(fitness_scores)
+    avg_fitness.append(gen_avg_fitness)
+
+    gen_variance = statistics.variance(fitness_scores)
+    variance_per_gen.append(gen_variance)
+    
     logbook = []
 
     # --- Generations ---
     for gen in range(generations):
+        print(f"--- Generation {gen} ---")
         new_population = []
         while len(new_population) < population_size:
             parent1, parent2 = select_parents(population, fitness_scores, method=selection_method)
@@ -164,15 +194,42 @@ def run_ga_custom(
 
         population = new_population[:population_size]
         fitness_scores = []
+        population_stats = []
         for individual in population:
-            individual_score = simulate_crop_rotation(field_state, climate_df, individual, farmer_knowledge, economic_data, missing_machinery, rotation_length)
+            individual_score = simulate_crop_rotation(
+                field_state, 
+                climate_df, 
+                individual, 
+                pest_manager, 
+                farmer_knowledge, 
+                economic_data, 
+                missing_machinery, 
+                crops_required_machinery,
+                past_crops, 
+                years
+            )
             fitness_scores.append(individual_score) 
+            # population_stats.append(individual_stats)
         
-        gen_best_score = max(fitness_scores)
-        gen_best = population[fitness_scores.index(gen_best_score)]
+        idx = fitness_scores.index(max(fitness_scores))
+        gen_best_score = fitness_scores[idx]
+        gen_best = population[idx]
+        # gen_best_stats = population_stats[idx]
+
+        gens_best_fitness.append(gen_best_score)
+        
+        gen_avg_fitness = sum(fitness_scores) / len(fitness_scores)
+        avg_fitness.append(gen_avg_fitness)
+
+        gen_variance = statistics.variance(fitness_scores)
+        variance_per_gen.append(gen_variance)
+        
+        
+
         if gen_best_score > best_score:
             best_score = gen_best_score
             best_individual = gen_best
+            # best_individual_stats = gen_best_stats
 
         logbook.append({
             "generation": gen,
@@ -180,7 +237,7 @@ def run_ga_custom(
             "avg_score": sum(fitness_scores) / len(fitness_scores),
         })
 
-    return best_individual, best_score, logbook
+    return best_individual, best_score, logbook, gens_best_fitness, avg_fitness, variance_per_gen
 
 
 

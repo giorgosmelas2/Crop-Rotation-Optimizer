@@ -12,8 +12,11 @@ from app.services.crop_info_service import fetch_crop_info
 from app.services.climate_service import get_climate_data
 from app.services.economic_service import get_economic_data
 from app.services.pest_service import create_pest_agent
+from app.services.required_machinery_service import get_required_machinery
 
 from app.ml.optimization.run_optimizer import optimize_rotation_plan
+
+from visualization.plots import fitness_evolution_plot, avg_fitness_evolution_plot, combined_fitness_plot, variance_plot
 
 router = APIRouter()
 
@@ -58,6 +61,8 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     # Fetching economic data for each crop
     economic_data = get_economic_data(crops)
 
+    crops_required_machinery = get_required_machinery(crops)
+
     missing_machinery = rotation_info.machinery
 
     rotation_years = rotation_info.years
@@ -68,7 +73,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     # print(f"climate_df: {climate_df}")
     # print(f"economic_data: {economic_data}")
 
-    best_rotation, score = optimize_rotation_plan(
+    best_rotation, score, log, gens_best_fitness, avg_fitness, variance_per_gen = optimize_rotation_plan(
         crops=crops,
         pest_manager=pest_manager,
         field_state=field,
@@ -76,8 +81,13 @@ async def create_rotation_plan(rotation_info: RotationInfo):
         farmer_knowledge=farmer_knowledge,
         economic_data= economic_data,
         missing_machinery=missing_machinery,
+        crops_required_machinery=crops_required_machinery,
         past_crops=rotation_info.past_crops,
         years=rotation_years
     )
 
-    print(f"Best rotation: {best_rotation}\nScore: {score}")
+    print(f"Best rotation: {best_rotation}\nScore: {score}\nLog: {log}")
+    # fitness_evolution_plot(gens_best_fitness)
+    # avg_fitness_evolution_plot(avg_fitness)
+    combined_fitness_plot(gens_best_fitness, avg_fitness)
+    variance_plot(variance_per_gen)

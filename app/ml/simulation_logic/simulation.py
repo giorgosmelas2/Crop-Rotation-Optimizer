@@ -1,5 +1,6 @@
 from copy import deepcopy
-from typing import Dict
+import json
+import os
 
 from app.ml.core_models.field_state import FieldState
 from app.ml.core_models.crop import Crop
@@ -15,9 +16,6 @@ from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evalua
 
 from app.agents.pest_simulation import PestSimulationManager
 
-from app.services.pest_service import create_pest_agent
-from app.services.required_machinery_service import get_required_machinery
-
 def simulate_crop_rotation( 
         field_state: FieldState, 
         climate_df: Climate, 
@@ -26,9 +24,10 @@ def simulate_crop_rotation(
         farmer_knowledge: FarmerKnowledge, 
         economic_data: list[Economics],
         missing_machinery: list[str],
+        crops_required_machinery: dict[int, list[str]],
         past_crops: list[str],
         years: int
-    ) -> float:
+    ) -> tuple[float, dict]:
 
     # Create a deep copy of the field state to avoid modifying the original
     field = deepcopy(field_state)
@@ -48,15 +47,15 @@ def simulate_crop_rotation(
     beneficial_rotations_score = beneficial_rotations_evaluation(crops, past_crops)
     crop_rotation_score = crop_rotation_evaluation(crops)
     
-    crops_required_machinery = get_required_machinery(crops)
-
     total_yield_score = 0.0
     total_climate_score = 0.0
     total_machinery_score = 0.0
 
     num_evaluated_crops = 0
 
-    for year in range(years):
+    cell_stats = {}
+    # Years + 1 if the last crop harvest month is in the next year
+    for year in range(years + 1):
         print(f"---Year {year + 1}---")  
         # Stop simulation if all crops have been processed
         if current_crop_index >= total_crops:
@@ -83,21 +82,20 @@ def simulate_crop_rotation(
                 print(f"Climate suitability score for {crop.name}: {climate_score:.2f}")
                     
                 # Missing machinery evaluation
-                machinery_score = machinery_evaluation(crops_required_machinery[current_crop_index], missing_machinery)
+                machinery_score = machinery_evaluation(crops_required_machinery[crop.id], missing_machinery)
                 total_machinery_score += machinery_score
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
             elif month == crop.harvest_month and not field_grid.is_field_empty():
                 # Evaluate total profit
-                yield_score = profit_evaluation(economic_data[current_crop_index], crop, field_grid, climate_df)
+                yield_score = profit_evaluation(economic_data[crop.id], crop, field_grid, climate_df)
                 total_yield_score += yield_score
                 print(f"Profit potential score for {crop.name}: {yield_score:.2f}")
-
 
                 print(f"Harvesting {crops[current_crop_index].name} in all cells.")
                 for row in range(field_grid.rows):
                     for col in range(len(field_grid.grid[row])):
-                        field_grid.harvest_crop(row, col)
                         cell = field_grid.get_cell(row, col)
+                        field_grid.harvest_crop(row, col)
                         update_soil_after_crop(crops[current_crop_index], cell)  
 
                 current_crop_index += 1
@@ -107,7 +105,7 @@ def simulate_crop_rotation(
                     break
             
             if not field_grid.is_field_empty():
-                    pest_manager.step(field_grid)
+                pest_manager.step(field_grid)
     
     final_yield_score = total_yield_score / num_evaluated_crops
     final_climate_score = total_climate_score / num_evaluated_crops

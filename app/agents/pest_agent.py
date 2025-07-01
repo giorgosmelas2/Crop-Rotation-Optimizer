@@ -25,10 +25,10 @@ class PestAgent:
         return self.lifespan > 0
     
     def update_lifespan(self, current_crop_family: str, current_crop_name: str):
-         """
-         Dicrease the lifespan if there is no suitable crop for the pest 
-         """
-         if current_crop_name not in self.affected_crops and current_crop_family not in self.affected_families:
+        """
+        Dicrease the lifespan if there is no suitable crop for the pest 
+        """
+        if current_crop_name not in self.affected_crops and current_crop_family not in self.affected_families:
             self.lifespan -= 1
 
     def spread(self, field: FieldGrid, max_rows, max_cols) -> list:

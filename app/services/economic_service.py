@@ -5,9 +5,9 @@ from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
 
 
-def get_economic_data(crops: List[Crop]) -> List[Economics]: 
+def get_economic_data(crops: List[Crop]) -> dict[int, Economics]: 
 
-    economy_list = []
+    economy_dict = {}
 
     for crop in crops:
         try:
@@ -20,14 +20,12 @@ def get_economic_data(crops: List[Crop]) -> List[Economics]:
             return None
         
         if result:
-            economy_list.append(
-                Economics(
+            economy_dict[crop.id] = Economics(
                     crop_id=result[0]["crop_id"],
                     tonne_price_sell=result[0]["tonne_price_sell"],
                     unit_price=result[0]["unit_price"],
                     units_per_acre=result[0]["units_per_acre"],
                     kg_yield_per_acre=result[0]["kg_yield_per_acre"]
                 )
-            )
-        
-    return economy_list
+            
+    return economy_dict
