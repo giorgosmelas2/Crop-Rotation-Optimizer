@@ -53,7 +53,8 @@ def simulate_crop_rotation(
 
     num_evaluated_crops = 0
 
-    cell_stats = {}
+    pest_tracking = {}
+
     # Years + 1 if the last crop harvest month is in the next year
     for year in range(years + 1):
         print(f"---Year {year + 1}---")  
@@ -106,7 +107,16 @@ def simulate_crop_rotation(
             
             if not field_grid.is_field_empty():
                 pest_manager.step(field_grid)
-    
+
+            for row in range(field_grid.rows):
+                for col in range(len(field_grid.grid[row])):
+                    month_key = f"{year + 1}-{month}"
+                    cell = field_grid.get_cell(row, col)
+                    if (row, col) not in pest_tracking:
+                        pest_tracking[(row, col)] = {}
+                    pest_tracking[(row, col)][month_key] = cell.pest_pressure
+
+
     final_yield_score = total_yield_score / num_evaluated_crops
     final_climate_score = total_climate_score / num_evaluated_crops
     final_machinery_score = total_machinery_score / num_evaluated_crops
@@ -122,7 +132,7 @@ def simulate_crop_rotation(
 
     print("Total score: ", total_score)
 
-    return total_score
+    return total_score, pest_tracking
    
     
     

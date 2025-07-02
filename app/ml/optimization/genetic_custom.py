@@ -141,9 +141,9 @@ def run_ga_custom(
     variance_per_gen = []
 
     fitness_scores = []
-    population_stats = []
+    pest_tracking = []
     for individual in population:
-        individual_score = simulate_crop_rotation(
+        score, tracking = simulate_crop_rotation(
             field_state, 
             climate_df, 
             individual, 
@@ -155,13 +155,13 @@ def run_ga_custom(
             past_crops, 
             years
         )
-        fitness_scores.append(individual_score)
-        # population_stats.append(individual_stats)
+        fitness_scores.append(score)
+        pest_tracking.append(tracking)
 
     idx = fitness_scores.index(max(fitness_scores))
     best_score = fitness_scores[idx]
     best_individual = population[idx]
-    # best_individual_stats = population_stats[idx]
+    best_tracking = pest_tracking[idx]
 
     gens_best_fitness.append(best_score)
 
@@ -194,9 +194,8 @@ def run_ga_custom(
 
         population = new_population[:population_size]
         fitness_scores = []
-        population_stats = []
         for individual in population:
-            individual_score = simulate_crop_rotation(
+            score, tracking = simulate_crop_rotation(
                 field_state, 
                 climate_df, 
                 individual, 
@@ -208,13 +207,13 @@ def run_ga_custom(
                 past_crops, 
                 years
             )
-            fitness_scores.append(individual_score) 
-            # population_stats.append(individual_stats)
+            fitness_scores.append(score) 
+            pest_tracking.append(tracking)
         
         idx = fitness_scores.index(max(fitness_scores))
-        gen_best_score = fitness_scores[idx]
         gen_best = population[idx]
-        # gen_best_stats = population_stats[idx]
+        gen_best_score = fitness_scores[idx]
+        gen_best_tracking = pest_tracking[idx]
 
         gens_best_fitness.append(gen_best_score)
         
@@ -223,21 +222,14 @@ def run_ga_custom(
 
         gen_variance = statistics.variance(fitness_scores)
         variance_per_gen.append(gen_variance)
-        
-        
 
         if gen_best_score > best_score:
             best_score = gen_best_score
             best_individual = gen_best
-            # best_individual_stats = gen_best_stats
+            best_tracking = gen_best_tracking
 
-        logbook.append({
-            "generation": gen,
-            "max_score": gen_best_score,
-            "avg_score": sum(fitness_scores) / len(fitness_scores),
-        })
 
-    return best_individual, best_score, logbook, gens_best_fitness, avg_fitness, variance_per_gen
+    return best_individual, best_score, gens_best_fitness, avg_fitness, variance_per_gen, best_tracking
 
 
 
