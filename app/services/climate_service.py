@@ -2,18 +2,24 @@ import requests, pandas as pd
 from app.models.coordinates import Coordinates 
 from app.ml.core_models.climate import Climate
 
-BASE_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
+BASE_URL = "https://power.larc.nasa.gov/api/temporal/monthly/point"
 PARAMS   = "T2M_MIN,T2M_MAX,PRECTOTCORR"
 MONTH_ORDER = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
 
-def get_climate_data(coordinates: Coordinates) -> Climate:
+def get_climate_data(
+    coordinates: Coordinates, 
+    start_year: int = 2015, 
+    end_year: int = 2024
+    ) -> Climate:
 
     params = {
         "parameters": PARAMS,
         "community": "AG",
         "latitude": coordinates.lat,
         "longitude": coordinates.lng,
-        "format": "JSON"
+        "format": "JSON",
+        "start": start_year,
+        "end": end_year
     }
 
     response = requests.get(BASE_URL, params=params, timeout=10)

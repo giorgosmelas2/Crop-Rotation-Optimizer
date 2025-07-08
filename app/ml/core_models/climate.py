@@ -20,12 +20,18 @@ class Climate():
             monthly_rain=df['rain'].tolist()
         )
     
+
+    
     # Get informations about the growing season
-    def growing_season(self, sowing_month: int, harvest_month: int) -> "Climate":
-        return Climate(
-            monthly_tmin=self.monthly_tmin[sowing_month:harvest_month],
-            monthly_tmax=self.monthly_tmax[sowing_month:harvest_month],
-            monthly_rain=self.monthly_rain[sowing_month:harvest_month]
-        )
+    def get_tmin(self, sow: int, harvest: int) -> list[float]:
+        return self.monthly_tmin[sow:harvest]
+    
+    def get_tmax(self, sow: int, harvest: int) -> list[float]:
+        return self.monthly_tmax[sow:harvest]
+    
+    def get_rain(self, sow: int, harvest: int) -> list[float]:
+        return self.monthly_rain[sow:harvest],
+            
+    
         
 

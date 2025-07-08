@@ -10,11 +10,6 @@ from app.ml.core_models.field import Field
 
 from app.services.beneficial_rotations_service import get_beneficial_rotations
 
-days_in_month = {
-        1: 31, 2: 28, 3: 31, 4: 30, 5: 31, 6: 30,
-        7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
-    }
-
 def climate_evaluation(climate: Climate, crop: Crop) -> float:
     """
     Evaluate the suitability of the climate for a given crop based on temperature and rainfall.
@@ -34,19 +29,20 @@ def climate_evaluation(climate: Climate, crop: Crop) -> float:
     harvest = crop.harvest_month
 
     # --- Temperature Evaluation ---
-    active_temp = get_active_temperatures(climate_df, sow, harvest)
+    active_tmin = climate.get_tmin(sow, harvest)
+    active_tmax = climate.get_tmax(sow, harvest)
 
     # Calculating temperature score
-    t_min_deviation = (crop.t_min - active_temp["tmin"]).clip(lower=0)
-    t_max_deviation = (active_temp["tmax"] - crop.t_max).clip(lower=0)
+    t_min_deviation = (crop.t_min - active_tmin["tmin"]).clip(lower=0)
+    t_max_deviation = (active_tmax["tmax"] - crop.t_max).clip(lower=0)
 
     # 1 if temperature is ok, <1 if is a little more, 0 if is not ok
     t_min_score = (1 - (t_min_deviation / TOL)).clip(lower=0)
     t_max_score = (1 - (t_max_deviation / TOL)).clip(lower=0)
 
     # Calculating optimal temperature score
-    t_opt_min_deviation = (crop.t_opt_min - active_temp["tmin"]).clip(lower=0)
-    t_opt_max_deviation = (active_temp["tmax"] - crop.t_opt_max).clip(lower=0)
+    t_opt_min_deviation = (crop.t_opt_min - active_tmin).clip(lower=0)
+    t_opt_max_deviation = (active_tmax - crop.t_opt_max).clip(lower=0)
 
     # 1 if temperature is ok, <1 if is a little more, 0 if is not ok
     t_opt_min_score = (1 - (t_opt_min_deviation / TOL)).clip(lower=0)
@@ -61,7 +57,7 @@ def climate_evaluation(climate: Climate, crop: Crop) -> float:
     total_temperature_score = temperature_score + temperature_opt_score
 
     # --- Rain Evaluation ---
-    total_rain = get_total_rain(climate_df, sow, harvest)
+    total_rain = climate.get_rain(sow, harvest)
     
     # Calculation the percentage difference from the ideal rain range
     if crop.rain_min_mm <= total_rain <= crop.rain_max_mm:
@@ -266,49 +262,6 @@ def beneficial_rotations_evaluation(crops: list[Crop], past_crops: list[str]) ->
 
 
 #--- Helper functions that are need from evaluation functions---
-
-def get_active_temperatures(climate_df: pd.DataFrame, sow: int, harvest: int) -> pd.DataFrame: 
-    """
-    Get the active temperatures for the crop's sowing and harvesting months.
-    Args:
-        climate_df (pd.DataFrame): DataFrame containing climate data with columns 'month', 'tmin', and 'tmax'.
-        sow (int): The month when the crop is sown.
-        harvest (int): The month when the crop is harvested.
-    Returns:
-        pd.DataFrame: DataFrame containing the active temperatures for the crop's sowing and harvesting months.
-    """
-    if sow <= harvest:
-        active_months = list(range(sow, harvest + 1))
-    else:
-        active_months = list(range(sow, 13)) + list(range(1, harvest + 1))
-
-    return climate_df[climate_df["month"].isin(active_months)][["tmin", "tmax"]]
-
-
-def get_total_rain(climate_df: pd.DataFrame, sow: int, harvest: int) -> pd.DataFrame:
-    """
-    Get the total rainfall for the crop's sowing and harvesting months. 
-    Args:
-        climate_df (pd.DataFrame): DataFrame containing climate data with columns 'month' and 'rain'.
-        sow (int): The month when the crop is sown.
-        harvest (int): The month when the crop is harvested.
-    Returns:
-        float: Total rainfall in mm
-    """
-    if sow <= harvest:
-        active_months = list(range(sow, harvest + 1))
-    else:
-        active_months = list(range(sow, 13)) + list(range(1, harvest + 1))
-
-    active_rain = climate_df[climate_df["month"].isin(active_months)][["month", "rain"]]
-
-    total_rain = 0.0
-    for _, row in active_rain.iterrows():
-        month = int(row["month"])
-        rain_per_day = row["rain"]
-        total_rain += rain_per_day * days_in_month[month]
-
-    return total_rain
 
 def nutrient_factor(required, actual):
     if actual >= required:
