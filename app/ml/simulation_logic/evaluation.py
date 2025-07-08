@@ -4,8 +4,9 @@ from typing import List
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
+from app.ml.core_models.climate import Climate
 
-from app.ml.grid.field_grid import FieldGrid
+from app.ml.core_models.field import Field
 
 from app.services.beneficial_rotations_service import get_beneficial_rotations
 
@@ -14,7 +15,7 @@ days_in_month = {
         7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
     }
 
-def climate_evaluation(climate_df: pd.DataFrame, crop: Crop) -> float:
+def climate_evaluation(climate: Climate, crop: Crop) -> float:
     """
     Evaluate the suitability of the climate for a given crop based on temperature and rainfall.
     Args:
@@ -87,7 +88,7 @@ def climate_evaluation(climate_df: pd.DataFrame, crop: Crop) -> float:
     return final_score
 
 
-def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, climate_df: pd.DataFrame) -> float:
+def profit_evaluation(economic_data: Economics, crop: Crop, field: Field, climate_df: pd.DataFrame) -> float:
     """
     Evaluate the profit potential of a crop based on economic data and field conditions.
     Args:
@@ -106,16 +107,16 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: FieldGrid, cl
         3: 1.0    
     }
     
-    total_field_area = field.get_total_area()
+    total_field_area = field.grid.get_total_area()
     max_yield = economic_data.kg_yield_per_acre 
     total_yield = 0.0
     
     # Calculate the climate suitability factor for this crop
     climate_factor = climate_evaluation(climate_df, crop)
 
-    for row in range(field.rows):
-        for col in range(len(field.grid[row])):
-            cell = field.get_cell(row, col)
+    for row in range(field.grid.rows):
+        for col in range(len(field.grid.grid[row])):
+            cell = field.grid.get_cell(row, col)
 
             # Calculate the effect of irrigation, fertilization, and spraying
             practice_factor = (

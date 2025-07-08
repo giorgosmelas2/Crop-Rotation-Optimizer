@@ -1,5 +1,11 @@
-from app.ml.grid.field_grid import FieldGrid
-from app.ml.grid.cell import Cell
+from typing import TYPE_CHECKING
+from __future__ import annotations
+
+if TYPE_CHECKING:
+    from app.ml.core_models.field import Field
+    from app.ml.grid.cell import Cell
+
+import random
 
 class PestAgent: 
     def __init__(
@@ -7,109 +13,150 @@ class PestAgent:
             name: str,
             affected_crops: list[str],
             affected_families: list[str],
-            lifespan: int = 3,
-            spread_rate_same_family: float = 0.3,
-            spread_rate_other: float = 0.1,
-            decay_rate: float = 0.05,
+            affected_orders: list[str],
         ):
             self.name = name
+            self.lifespan = 1.0
+            self.lifespan_increase = random.uniform(0.1, 0.3)
+            self.lifespan_decrease = random.uniform(0.1, 0.25)
             self.affected_crops = affected_crops
             self.affected_families = affected_families
+            self.affected_orders = affected_orders
 
-            self.lifespan = lifespan
-            self.spread_rate_same_family = spread_rate_same_family
-            self.spread_rate_other = spread_rate_other
-            self.decay_rate = decay_rate
+            self.row = None
+            self.col = None
+
+            self.spread_rate_same_crops = random.uniform(0.15, 0.2)
+            self.spread_rate_same_family = random.uniform(0.07, 0.12)
+            self.spread_rate_same_order = random.uniform(0.03, 0.5)
+            self.decay_rate = random.uniform(0.05, 0.09)
+            self.spread_chance = random.uniform(0.1, 0.25)
 
     def is_alive(self) -> bool:
-        return self.lifespan > 0
+        return self.lifespan > 0.0
     
-    def update_lifespan(self, current_crop_family: str, current_crop_name: str):
+    def spread(self, field: Field):
         """
-        Dicrease the lifespan if there is no suitable crop for the pest 
+        Spread the pest agent to neighboring cells
         """
-        if current_crop_name not in self.affected_crops and current_crop_family not in self.affected_families:
-            self.lifespan -= 1
+        neighbors = [
+            (self.row - 1, self.col), # Up
+            (self.row + 1, self.col), # Down
+            (self.row, self.col - 1), # Left
+            (self.row, self.col + 1), # Right
+            (self.row - 1, self.col - 1), # Up-Left
+            (self.row - 1, self.col + 1), # Up-Right
+            (self.row + 1, self.col - 1), # Down-Left
+            (self.row + 1, self.col + 1)  # Down-Right
+        ]
 
-    def spread(self, field: FieldGrid, max_rows, max_cols) -> list:
-        """
-        Returns a list with the positions where the agent can spread
-        """
-        new_positions = []
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        
-        for dr, dc in directions:
-            new_r, new_c = self.row + dr, self.col + dc
-            if 0 <= new_r < max_rows and 0 <= new_c < max_cols:
-                cell = field.get_cell(new_r, new_c)
-                crop = cell.current_crop
-                crop_name = crop.name
-                crop_family = crop.family
+        for n_row, n_col in neighbors:
+            if (0 <= n_row < field.grid.rows and 0 <= n_col < field.grid.cols):
+                neighbor_cell = field.grid.get_cell(n_row, n_col)
+                if not neighbor_cell.has_this_pest(self.name): 
+                    if random.random() < self.spread_chance:
+                        new_pest = PestAgent(
+                            name=self.name,
+                            
+                            lifespan=self.lifespan,
+                            affected_crops=self.affected_crops,
+                            affected_families=self.affected_families,
+                            
+                            spread_rate_same_family=self.spread_rate_same_family,
+                            affected_orders=self.affected_orders,
+                            spread_rate_same_order=self.spread_rate_same_order,
+                            row=n_row,
+                            col=n_col,
+                            
+                            decay_rate=self.decay_rate,
+                            spread_chance=self.spread_chance  
+                        )
+                        neighbor_cell.pests.append(new_pest)
+                    
 
-                if crop_name in self.affected_crops:
-                    chance = self.spread_rate_same_family
-                elif crop_family in self.affected_families:
-                    chance = self.spread_rate_other
-                else:
-                    chance = 0.0
-
-                from random import random
-                if random() < chance:
-                    new_positions.append((new_r, new_c))
-
-        return new_positions
-    
-    def apply_effects(self, cell: Cell):
+    def apply_effect(self, cell: Cell):
         """
-        Increases pest pressure in the cell, considering crop susceptibility and spraying level.
+        Apply the pest agent's effect on the field
         """
-        crop = cell.current_crop
-        if not crop:
+        spraying_effect = {
+            0: 0.0,
+            1: 0.3,
+            2: 0.7,
+            3: 0.95 
+        } 
+        spraying_level = cell.spraying
+   
+        current_crop = cell.current_crop
+        if not current_crop:
+            print(f"No crop in cell")
+            cell.pest_pressure -= self.decay_rate
+            cell.pest_pressure = max(cell.pest_pressure, 0.0)
             return
         
-        if crop.name in self.affected_crops:
-            base_increase = 0.15
-        elif crop.family in self.affected_families:
-            base_increase = 0.08
+        if current_crop.name in self.affected_crops:
+            rate = self.spread_rate_same_crops
+        elif current_crop.family in self.affected_families:
+            rate = self.spread_rate_same_family
+        elif current_crop.order in self.affected_orders:
+            rate = self.spread_rate_same_order
+        else:
+            cell.pest_pressure -= self.decay_rate
+            cell.pest_pressure = max(cell.pest_pressure, 0.0)
 
-        spraying_level = cell.spraying
+        reduction = spraying_effect[spraying_level] * rate
+        cell.pest_pressure += rate - reduction
+        cell.pest_pressure = min(cell.pest_pressure, 1.0)
+                        
+
+                    
+
+    def update_lifespan(self, cell: Cell):
         spraying_effect = {
-            0: 1.0,
-            1: 0.6,
-            2: 0.3,
-            3: 0.1
-        }
+            0: 0.0,
+            1: 0.2,
+            2: 0.5,
+            3: 0.7 
+        } 
+        spraying_level = cell.spraying
+        current_crop = cell.current_crop 
+        past_crop = cell.crop_history[-1] if cell.crop_history[-1] else None
+        pre_past_crop = cell.crop_history[-2] if cell.crop_history[-2] else None
+        
 
-        spraying_factor = spraying_effect.get(spraying_level, 1.0)
-        final_increase = base_increase * spraying_factor
+        spraying_decrease = spraying_effect[spraying_level] * self.lifespan_decrease
+        self.lifespan -= spraying_decrease
 
-        cell.pest_pressure = min(cell.pest_pressure + final_increase, 1.0)
+        if self.is_alive():
+            if current_crop:
+                if current_crop.name in self.affected_crops:
+                    self.lifespan += self.lifespan_increase
+                elif current_crop.family in self.affected_families:
+                    self.lifespan += self.lifespan_increase * 0.5
+                elif current_crop.order in self.affected_orders:
+                    self.lifespan += self.lifespan_increase * 0.25
+                else:
+                    self.lifespan -= self.lifespan_decrease
+            else:
+                self.lifespan -= self.lifespan_decrease
 
-
-    def decay(self, field: FieldGrid):
-        """
-        Reduces pest pressure in cells where the pest is not supported.
-        """
-        for row in range(field.rows):
-            for col in range(len(field.grid[row])):
-                cell = field.get_cell(row, col)
-                crop = cell.current_crop
-
-                crop_name = crop.name
-                crop_family = crop.family
-
-                if crop_name not in self.affected_crops and crop_family not in self.affected_families:
-                    spraying_bonus = {
-                    0: 0.0,
-                    1: 0.02,
-                    2: 0.05,
-                    3: 0.1
-                }
-                spraying_level = cell.spraying
-                extra_decay = spraying_bonus.get(spraying_level, 0.0)
-                total_decay = self.decay_rate + extra_decay
-
-                cell.pest_pressure = max(cell.pest_pressure - total_decay, 0.0)
+            if past_crop:
+                if past_crop.name in self.affected_crops:
+                    self.lifespan += self.lifespan_increase * 0.5
+                elif past_crop.family in self.affected_families:
+                    self.lifespan += self.lifespan_increase * 0.25
+                elif past_crop.order in self.affected_orders:
+                    self.lifespan += self.lifespan_increase * 0.1
+            
+            if pre_past_crop:
+                if pre_past_crop.name in self.affected_crops:
+                    self.lifespan += self.lifespan_increase * 0.25
+                elif pre_past_crop.family in self.affected_families:
+                    self.lifespan += self.lifespan_increase * 0.1
+                elif pre_past_crop.order in self.affected_orders:
+                    self.lifespan += self.lifespan_increase * 0.05
+        else:
+            print(f"{self.name} has died in cell.")
+            cell.pests.remove(self)
         
     def __repr__(self):
         return f"<PestAgent {self.name}>"

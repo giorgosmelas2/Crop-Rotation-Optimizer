@@ -119,8 +119,8 @@ def select_parents(population, fitness_scores, method="tournament", tournament_s
 def run_ga_custom(
         crops,
         pest_manager,
-        field_state,
-        climate_df,
+        field,
+        climate,
         farmer_knowledge,
         economic_data,
         missing_machinery,
@@ -128,7 +128,7 @@ def run_ga_custom(
         past_crops,
         years,
         population_size=5,
-        generations=10,
+        generations=5,
         crossover_rate=0.7,
         mutation_rate=0.2,
         selection_method="tournament"
@@ -144,8 +144,8 @@ def run_ga_custom(
     pest_tracking = []
     for individual in population:
         score, tracking = simulate_crop_rotation(
-            field_state, 
-            climate_df, 
+            field, 
+            climate, 
             individual, 
             pest_manager, 
             farmer_knowledge, 
@@ -196,8 +196,8 @@ def run_ga_custom(
         fitness_scores = []
         for individual in population:
             score, tracking = simulate_crop_rotation(
-                field_state, 
-                climate_df, 
+                field, 
+                climate, 
                 individual, 
                 pest_manager, 
                 farmer_knowledge, 

@@ -1,7 +1,7 @@
 import pytest
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.climate import Climate
-from app.ml.core_models.field_state import FieldState
+from app.ml.core_models.field import Field
 
 @pytest.fixture
 def dummy_crop():
@@ -45,7 +45,7 @@ def make_dummy_crop(**overrides) -> Crop:
 
 @pytest.fixture
 def dummy_field():
-    return FieldState(
+    return Field(
         area=5,
         soil_type="loamy",
         n=78.0,

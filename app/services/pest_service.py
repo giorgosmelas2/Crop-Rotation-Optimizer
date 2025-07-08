@@ -7,7 +7,7 @@ def create_pest_agent(crop_names: list[str]) -> list[PestAgent]:
     for crop_name in crop_names:
         try:
             crop = supabase.table("crops") \
-                .select("crop_id, family, order") \
+                .select("crop_id,") \
                 .eq("crop_name", crop_name) \
                 .execute().data
             
@@ -35,18 +35,21 @@ def create_pest_agent(crop_names: list[str]) -> list[PestAgent]:
             crop_ids_list = [entry["crop_id"] for entry in crop_ids_result]
 
             related_crops = supabase.table("crops") \
-                .select("crop_name, family") \
+                .select("crop_name, family, order") \
                 .in_("crop_id", crop_ids_list) \
                 .execute().data
             
             affected_crops = list({crop["crop_name"] for crop in related_crops})
             affected_families = list({crop["family"] for crop in related_crops})
+            affected_orders = list({crop["order"] for crop in related_crops})
 
             pest_agent = PestAgent(
                 name=pest_name,
                 affected_crops=affected_crops,
-                affected_families=affected_families
+                affected_families=affected_families,
+                affected_orders=affected_orders
             )
+            print(f"Created pest agent for {crop_name}: {pest_agent}")
 
             pest_agents.append(pest_agent)
         except Exception as e:

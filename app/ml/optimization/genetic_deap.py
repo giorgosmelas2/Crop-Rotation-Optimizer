@@ -22,8 +22,8 @@ def init_individual(crops, rotation_length):
 def evaluate_individual(
         individual,  
         pest_manager, 
-        field_state, 
-        climate_df, 
+        field, 
+        climate, 
         farmer_knowledge, 
         economic_data, 
         missing_machinery, 
@@ -33,8 +33,8 @@ def evaluate_individual(
     ) -> tuple[float]:
 
     individual_score, pest_tracking = simulate_crop_rotation(
-        field_state, 
-        climate_df, 
+        field, 
+        climate, 
         individual, 
         pest_manager, 
         farmer_knowledge, 
@@ -59,8 +59,8 @@ def mutate_individual(individual: list[Crop], all_crops: list[Crop])  -> tuple[l
 def run_ga_deap(
         crops, 
         pest_manager,
-        field_state, 
-        climate_df, 
+        field, 
+        climate, 
         farmer_knowledge, 
         economic_data, 
         missing_machinery, 
@@ -79,8 +79,8 @@ def run_ga_deap(
         return evaluate_individual(
             individual, 
             pest_manager, 
-            field_state, 
-            climate_df, 
+            field, 
+            climate, 
             farmer_knowledge, 
             economic_data, 
             missing_machinery, 

@@ -1,30 +1,27 @@
-import math
-from typing import List
-from app.ml.core_models.field_state import FieldState
+from app.models.rotation_input import RotationInfo
 from app.ml.grid.cell import Cell
 
-
-def create_default_cell_data(field_state: FieldState) -> dict:
+def create_default_cell_data(rotation_info: RotationInfo) -> dict:
     return {
-        "n": field_state.n,
-        "p": field_state.p,
-        "k": field_state.k,
-        "ph": field_state.ph,
-        "soil_type": field_state.soil_type,
-        "irrigation": field_state.irrigation,
-        "fertilization": field_state.fertilization,
-        "spraying": field_state.spraying,
+        "n": rotation_info.n,
+        "p": rotation_info.p,
+        "k": rotation_info.k,
+        "ph": rotation_info.ph,
+        "soil_type": rotation_info.soil_type,
+        "irrigation": rotation_info.irrigation,
+        "fertilization": rotation_info.fertilization,
+        "spraying": rotation_info.spraying,
     }
 
-def cell_create(total_area: float, field_state: FieldState) -> List[Cell]:
-    full_cells = int(total_area)
-    remainder = round(total_area - full_cells, 2)
+def cell_create(rotation_info: RotationInfo) -> list[Cell]:
+    full_cells = int(rotation_info.area)
+    remainder = round(rotation_info.area - full_cells, 2)
 
     areas = [1.0] * full_cells
     if remainder > 0:
         areas.append(remainder)
 
-    base_data = create_default_cell_data(field_state)
+    base_data = create_default_cell_data(rotation_info)
 
     cells = []
     for area in areas:

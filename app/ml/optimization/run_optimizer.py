@@ -1,8 +1,8 @@
 def optimize_rotation_plan(
     crops,
     pest_manager,
-    field_state,
-    climate_df,
+    field,
+    climate,
     farmer_knowledge,
     economic_data,
     missing_machinery,
@@ -16,8 +16,8 @@ def optimize_rotation_plan(
         best, score, gens_best_fitness, avg_fitness, variance_per_gen, pest_tracking = run_ga_deap(
             crops, 
             pest_manager,
-            field_state, 
-            climate_df,
+            field, 
+            climate,
             farmer_knowledge, 
             economic_data,
             missing_machinery,
@@ -30,8 +30,8 @@ def optimize_rotation_plan(
         best, score, gens_best_fitness, avg_fitness, variance_per_gen, pest_tracking = run_ga_custom(
             crops, 
             pest_manager,
-            field_state, 
-            climate_df,
+            field, 
+            climate,
             farmer_knowledge, 
             economic_data,
             missing_machinery, 

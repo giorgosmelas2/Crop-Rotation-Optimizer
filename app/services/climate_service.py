@@ -1,11 +1,13 @@
 import requests, pandas as pd
 from app.models.coordinates import Coordinates 
+from app.ml.core_models.climate import Climate
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/climatology/point"
 PARAMS   = "T2M_MIN,T2M_MAX,PRECTOTCORR"
 MONTH_ORDER = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
 
-def get_climate_data(coordinates: Coordinates) -> pd.DataFrame:
+def get_climate_data(coordinates: Coordinates) -> Climate:
+
     params = {
         "parameters": PARAMS,
         "community": "AG",
@@ -27,5 +29,7 @@ def get_climate_data(coordinates: Coordinates) -> pd.DataFrame:
         "tmax": [js["T2M_MAX"][m] for m in months],
         "rain": [js["PRECTOTCORR"][m] for m in months],
     })
+    
+    climate = Climate.from_dataframe(df)
 
-    return df
+    return climate

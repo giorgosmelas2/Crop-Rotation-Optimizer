@@ -1,6 +1,6 @@
-from typing import List
+from app.ml.grid.field_grid import FieldGrid
 
-class FieldState: 
+class Field: 
     def __init__(
             self,
             area: float,
@@ -12,8 +12,9 @@ class FieldState:
             irrigation: int, 
             fertilization: int, 
             spraying: int,
-            past_crops: List[str]
-            ):
+            past_crops: list[str],
+            grid: FieldGrid = None
+        ):
         
         self.area = area
         self.n = n * 390 # Conversion from g/kg to kg/stremma
@@ -24,7 +25,8 @@ class FieldState:
         self.irrigation = irrigation
         self.fertilization = fertilization
         self.spraying = spraying
-        self.past_crops = past_crops
+        self.past_crops = past_crops,
+        self.grid = grid
 
         # self.validate()
 
