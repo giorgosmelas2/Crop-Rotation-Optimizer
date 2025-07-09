@@ -1,6 +1,4 @@
 import pandas as pd
-from typing import List
-
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
@@ -58,26 +56,22 @@ def climate_evaluation(climate: Climate, crop: Crop) -> float:
 
     # --- Rain Evaluation ---
     total_rain = climate.get_rain(sow, harvest)
-    
-    # Calculation the percentage difference from the ideal rain range
-    if crop.rain_min_mm <= total_rain <= crop.rain_max_mm:
-        rain_diff_percent = 0.0
-    elif total_rain < crop.rain_min_mm:
-        rain_diff_percent = (crop.rain_min_mm - total_rain) / crop.rain_min_mm
-    else:
-        rain_diff_percent = (total_rain - crop.rain_max_mm) / crop.rain_max_mm
 
-    # Assigning rain score based on the difference percentage
-    if rain_diff_percent <= 0.1:
+    RAIN_TOLERANCE = 0.1
+    RAIN_PENALTY_FACTOR = 1.5
+
+    if crop.rain_min_mm <= total_rain <= crop.rain_max_mm:
         rain_score = 1.0
-    elif rain_diff_percent <= 0.2:
-        rain_score = 0.9
-    elif rain_diff_percent <= 0.3:
-        rain_score = 0.8
-    elif rain_diff_percent <= 0.5:
-        rain_score = 0.4
     else:
-        rain_score = 0.0
+        if total_rain < crop.rain_min_mm:
+            diff_percent = (crop.rain_min_mm - total_rain) / crop.rain_min_mm
+        else: 
+            diff_percent = (total_rain - crop.rain_max_mm) / crop.rain_max_mm
+        
+        if diff_percent <= RAIN_TOLERANCE:
+            rain_score = 1.0
+        else:
+            rain_score = max(0.0, 1.0 - (diff_percent - RAIN_TOLERANCE) * RAIN_PENALTY_FACTOR)
 
     # Final score
     final_score = (total_temperature_score + rain_score) / 2  
@@ -166,7 +160,7 @@ def profit_evaluation(economic_data: Economics, crop: Crop, field: Field, climat
    
     return normalized_profit
 
-def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: List[Crop], past_crops: list[str]) -> float:
+def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: list[Crop], past_crops: list[str]) -> float:
     """
     Evaluate the farmer's knowledge based on the crop's requirements and the farmer's knowledge.
     Args:

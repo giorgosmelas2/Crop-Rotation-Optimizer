@@ -21,9 +21,9 @@ class Cell:
         ):
         
         self.area = area
-        self.n = n
-        self.p = p
-        self.k = k
+        self.n = n * 390 # Conversion from g/kg to kg/stremma
+        self.p = p * 0.39 # Conversion from mg/kg to kg/stremma
+        self.k = k * 0.39 # Conversion from mg/kg to kg/stremma
         self.ph = ph
         self.soil_type = soil_type
         self.irrigation = irrigation

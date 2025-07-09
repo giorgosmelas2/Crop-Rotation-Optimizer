@@ -42,15 +42,6 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     field_grid = FieldGrid(cells=cells)
     field = Field(
         area=rotation_info.area,
-        soil_type=rotation_info.soil_type,
-        fertilization=rotation_info.fertilization,
-        spraying=rotation_info.spraying,
-        irrigation=rotation_info.irrigation,
-        n=rotation_info.n,  
-        p=rotation_info.p,
-        k=rotation_info.k,
-        ph=rotation_info.ph,
-        past_crops=rotation_info.past_crops,
         grid=field_grid
     )
 

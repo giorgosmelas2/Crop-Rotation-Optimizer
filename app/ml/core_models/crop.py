@@ -1,3 +1,5 @@
+from app.ml.core_models.climate import Climate
+
 class Crop:
     def __init__(
             self,
@@ -128,3 +130,18 @@ class Crop:
             f"k_ret: {self.k_ret}",
             f"pest: {self.pest}",
         ]) + "\n)"
+    
+    def get_temperature_stress(self, climate: Climate) -> float:
+        sow = self.sow_month
+        harvest = self.harvest_month
+        tmins = climate.get_tmin(sow, harvest)
+        tmaxs = climate.get_tmax(sow, harvest)
+
+        stress = 0.0
+        
+
+
+
+
+
+
