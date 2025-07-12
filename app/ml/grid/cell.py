@@ -10,6 +10,7 @@ class Cell:
             k: float,
             ph: float, 
             soil_type: str, 
+            soil_moisture: float,
             irrigation: int,
             fertilization: int,
             spraying: int,
@@ -26,6 +27,7 @@ class Cell:
         self.k = k * 0.39 # Conversion from mg/kg to kg/stremma
         self.ph = ph
         self.soil_type = soil_type
+        self.soil_moisture = soil_moisture
         self.irrigation = irrigation
         self.fertilization = fertilization
         self.spraying = spraying

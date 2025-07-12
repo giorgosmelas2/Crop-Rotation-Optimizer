@@ -1,4 +1,5 @@
 from app.ml.core_models.climate import Climate
+from app.ml.grid.cell import Cell
 
 class Crop:
     def __init__(
@@ -138,7 +139,82 @@ class Crop:
         tmaxs = climate.get_tmax(sow, harvest)
 
         stress = 0.0
+        total = 0.0
+        for tmin, tmax in zip(tmins, tmaxs):
+            # Ideal range
+            if self.t_opt_min <= tmin <= self.t_opt_max and \
+                self.t_opt_min <= tmax <= self.t_opt_max:
+                continue
+            # Tolerable range
+            if self.t_min <= tmin <= self.t_max and self.t_min <= tmax <= self.t_max:
+                # dev from the optimal
+                dev_min = max(self.t_opt_min - tmin, tmin - self.t_opt_max, 0)
+                dev_max = max(self.t_opt_min - tmax, tmax - self.t_opt_max, 0)
+                stress = (dev_min + dev_max) / (2 * (self.t_opt_max - self.t_opt_min))
+
+                if (
+                    self.t_min <= tmin <= self.t_opt_min and self.t_min <= tmax <= self.t_opt_min
+                ) or (
+                    self.t_opt_max <= tmin <= self.t_max and self.t_opt_max <= tmax <= self.t_max
+                ):
+                    stress **= 1.3
+                else:
+                    stress **= 1.1   
+            else:
+                # Out of range
+                dev_min = max(self.t_min - tmin, tmin - self.t_max, 0)
+                dev_max = max(self.t_min - tmax, tmax - self.t_max, 0)
+                normalized  = (dev_min + dev_max) / (2 * (self.t_max - self.t_min))
+                stress = normalized ** 1.5
+              
+            total += stress
+
+        months = max(harvest - sow, 1)
+        return min(total / months, 1.0)
+
+    def get_rain_stress(self, climate: Climate) -> float:
+        sow = self.sow_month
+        harvest = self.harvest_month
+        total_rain = sum(climate.get_rain(sow, harvest))
+
+        if self.rain_min_mm <= total_rain <= self.rain_max_mm:
+            return 0.0
+            
+        if total_rain < self.rain_min_mm:
+            diff = self.rain_min_mm - total_rain
+            range_ = self.rain_max_mm - self.rain_min_mm or 1  
+            stress = diff / range_
+        else:
+            diff = total_rain - self.rain_max_mm
+            range_ = self.rain_max_mm - self.rain_min_mm or 1
+            stress = diff / range_
+
+        return min(stress, 1.0)
+
+    def get_moisture_stress(self, cell: Cell) -> float:
+        irrigation_effect = {
+            0: 1.0,
+            1: 0.6,
+            2: 0.3,
+            3: 0.0
+        }
+
+        irrigation_factor = irrigation_effect.get(cell.irrigation, 1.0)
+        required_water = self.etc_mm * irrigation_factor
+
+        if required_water == 0:
+            return 0.0
         
+        if cell.soil_moisture >= required_water:
+            cell.soil_moisture -= required_water
+            return 0.0
+        
+        defict = required_water - cell.soil_moisture
+        stress = defict / required_water
+
+        return min(max(stress, 0.0),1.0)
+        
+
 
 
 

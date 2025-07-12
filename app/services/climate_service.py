@@ -3,7 +3,7 @@ from app.models.coordinates import Coordinates
 from app.ml.core_models.climate import Climate
 
 BASE_URL = "https://power.larc.nasa.gov/api/temporal/monthly/point"
-PARAMS   = "T2M_MIN,T2M_MAX,PRECTOTCORR"
+PARAMS   = "T2M_MIN,T2M_MAX,PRECTOTCORR,EVPTRNS,RH2M"
 MONTH_ORDER = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"]
 
 def get_climate_data(
@@ -14,7 +14,7 @@ def get_climate_data(
 
     params = {
         "parameters": PARAMS,
-        "community": "AG",
+        "community": "AG", 
         "latitude": coordinates.lat,
         "longitude": coordinates.lng,
         "format": "JSON",
@@ -34,6 +34,8 @@ def get_climate_data(
         "tmin": [js["T2M_MIN"][m] for m in months],
         "tmax": [js["T2M_MAX"][m] for m in months],
         "rain": [js["PRECTOTCORR"][m] for m in months],
+        "evap": [js["EVPTRNS"][m] for m in months],
+        "rh": [js["RH2M"][m] for m in months],
     })
     
     climate = Climate.from_dataframe(df)

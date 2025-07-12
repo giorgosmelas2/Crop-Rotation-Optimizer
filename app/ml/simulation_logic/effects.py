@@ -1,14 +1,10 @@
 from app.ml.grid.cell import Cell
 from app.ml.core_models.crop import Crop
+from app.ml.core_models.climate import Climate
 
 def update_soil_after_crop(crop: Crop, cell: Cell): 
     """
     Update the soil nutrients in a cell after a crop is harvested.
-    Args:
-        crop (Crop): The crop that was harvested.
-        cell (Cell): The cell where the crop was grown.
-    Returns:
-        None: The function modifies the cell's nutrient values in place.
     """
     # Nutrient subtractions based on the crop's nutrient uptake
     n_subtracted = cell.n - crop.n
@@ -45,6 +41,33 @@ def update_soil_after_crop(crop: Crop, cell: Cell):
     cell.n = max(0.0, total_n)
     cell.p = max(0.0, total_p)
     cell.k = max(0.0, total_k)
+
+
+def update_soil_moisture_after_crop(crop: Crop, cell: Cell, climate: Climate):
+    """
+    Updates soil moisture for a cell based in:
+    - rain (mm),
+    - evapotranspiration (mm)
+    - relative humidity (%)
+    """
+    sow = crop.sow_month
+    harvest = crop.harvest_month
+
+    monthly_rain = climate.get_rain(sow, harvest)
+    monthly_evap = climate.get_evap(sow, harvest)
+    monthly_rh = climate.get_rh(sow, harvest)
+
+    for rain, evap, rh in zip(monthly_rain, monthly_evap, monthly_rh):
+        # Price restriction RH [0.0, 1.0]
+        rh = min(max(rh, 0.0), 1.0)
+
+        # Calculation of actual evaporation, taking into account relative humidity
+        evap_effective = evap * (1.1 - rh)
+
+        delta = rain - evap_effective
+
+        cell.soil_moisture += delta 
+    
 
 
 

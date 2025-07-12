@@ -8,11 +8,16 @@ from app.ml.core_models.farmer_knowledge import FarmerKnowledge
 from app.ml.core_models.climate import Climate
 from app.ml.core_models.economics import Economics
 
-from app.ml.simulation_logic.effects import update_soil_after_crop
-from app.ml.simulation_logic.evaluation import climate_evaluation, profit_evaluation, farmer_knowledge_evaluation, machinery_evaluation, crop_rotation_evaluation, beneficial_rotations_evaluation
+from app.ml.simulation_logic.effects import update_soil_after_crop, update_soil_moisture_after_crop
+from app.ml.simulation_logic.evaluation import profit_evaluation
+
+from app.ml.evaluation.beneficial_rotations_evaluator import beneficial_rotations_evaluation
+from app.ml.evaluation.climate_evaluator import climate_evaluation
+from app.ml.evaluation.crop_rotation_evaluator import crop_rotation_evaluation
+from app.ml.evaluation.farmer_knowledge_evaluator import farmer_knowledge_evaluation
+from app.ml.evaluation.machinery_evaluator import machinery_evaluation
 
 from app.agents.pest_simulation import PestSimulationManager
-from app.agents.pest_agent import PestAgent
 
 def simulate_crop_rotation( 
         field: Field, 
@@ -75,6 +80,7 @@ def simulate_crop_rotation(
                 # Missing machinery evaluation
                 machinery_score = machinery_evaluation(crops_required_machinery[crop.id], missing_machinery)
                 total_machinery_score += machinery_score
+
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
             elif month == crop.harvest_month and not field.grid.is_field_empty():
                 # Evaluate total profit
@@ -86,8 +92,9 @@ def simulate_crop_rotation(
                 for row in range(field.grid.rows):
                     for col in range(len(field.grid.cell_grid[row])):
                         cell = field.grid.get_cell(row, col)
+                        update_soil_moisture_after_crop(crop, cell, climate)
+                        update_soil_after_crop(crop, cell) 
                         field.grid.harvest_crop(row, col)
-                        update_soil_after_crop(crops[current_crop_index], cell)  
 
                 current_crop_index += 1
                 # If all crops have been processed, stop the simulation
