@@ -1,6 +1,10 @@
 from app.ml.core_models.crop import Crop
 
 def crop_rotation_evaluation(crops: list[Crop]) -> float:
+    # Avoid evaluation if less than 2 crops (no rotation can be evaluated)
+    if len(crops) < 2:
+        return 1.0 
+    
     root_score = 0.0
 
     #--- Root depth alternation ---

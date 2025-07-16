@@ -16,6 +16,7 @@ from app.services.climate_service import get_climate_data
 from app.services.economic_service import get_economic_data
 from app.services.pest_service import create_pest_agent
 from app.services.required_machinery_service import get_required_machinery
+from app.services.beneficial_rotations_service import get_beneficial_rotations
 
 from app.ml.optimization.run_optimizer import optimize_rotation_plan
 
@@ -63,6 +64,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     economic_data = get_economic_data(crops)
 
     crops_required_machinery = get_required_machinery(crops)
+    beneficial_rotations = get_beneficial_rotations()
 
     missing_machinery = rotation_info.machinery
 
@@ -80,6 +82,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
         field_state=field,
         climate=climate,
         farmer_knowledge=farmer_knowledge,
+        beneficial_rotations=beneficial_rotations,
         economic_data= economic_data,
         missing_machinery=missing_machinery,
         crops_required_machinery=crops_required_machinery,

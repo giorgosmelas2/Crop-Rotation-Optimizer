@@ -3,8 +3,11 @@ from app.services.beneficial_rotations_service import get_beneficial_rotations
 
 def beneficial_rotations_evaluation(crops: list[Crop], past_crops: list[str]) -> float:
     beneficial_rotations = get_beneficial_rotations()
-    last_crop = past_crops[-1] # Only the last crop
-    crop_names = [last_crop] + [crop.name for crop in crops]
+
+    crop_names = [crop.name for crop in crops]
+    if past_crops:
+        last_crop = past_crops[-1]
+        crop_names.insert(0, last_crop)
     total_benefial_sequences = 0
     total_windows = 0
 

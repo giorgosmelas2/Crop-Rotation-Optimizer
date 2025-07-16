@@ -1,5 +1,5 @@
 from app.ml.core_models.climate import Climate
-from app.ml.grid.cell import Cell
+
 
 class Crop:
     def __init__(
@@ -133,25 +133,36 @@ class Crop:
         ]) + "\n)"
     
     def get_temperature_stress(self, climate: Climate) -> float:
+        """
+        Calculates temperature stress on the crop during its growing season.
+
+        Returns a value from 0 (no stress) to 1 (extreme stress) based on how 
+        climate temperatures deviate from the crop's optimal and tolerable ranges.
+        """
+        # Get the temperature values during the crop's growth period
         sow = self.sow_month
         harvest = self.harvest_month
         tmins = climate.get_tmin(sow, harvest)
         tmaxs = climate.get_tmax(sow, harvest)
 
-        stress = 0.0
-        total = 0.0
+        total = 0.0 # Sum of stress values across months
+
         for tmin, tmax in zip(tmins, tmaxs):
-            # Ideal range
-            if self.t_opt_min <= tmin <= self.t_opt_max and \
+            # Case 1: Extreme cold or heat beyond survivable limit
+            if tmin < self.t_min - 5 or tmax > self.t_max + 5:
+                return 1.0
+            # Case 2: Ideal temperature range (no stress)
+            elif self.t_opt_min <= tmin <= self.t_opt_max and \
                 self.t_opt_min <= tmax <= self.t_opt_max:
                 continue
-            # Tolerable range
-            if self.t_min <= tmin <= self.t_max and self.t_min <= tmax <= self.t_max:
-                # dev from the optimal
+            # Case 3: Within tolerable range but outside optimal
+            elif self.t_min <= tmin <= self.t_max and self.t_min <= tmax <= self.t_max:
+                # Calculate deviation from optimal temperatures
                 dev_min = max(self.t_opt_min - tmin, tmin - self.t_opt_max, 0)
                 dev_max = max(self.t_opt_min - tmax, tmax - self.t_opt_max, 0)
                 stress = (dev_min + dev_max) / (2 * (self.t_opt_max - self.t_opt_min))
 
+                # Apply penalty curve based on how far it is from optimal
                 if (
                     self.t_min <= tmin <= self.t_opt_min and self.t_min <= tmax <= self.t_opt_min
                 ) or (
@@ -160,8 +171,8 @@ class Crop:
                     stress **= 1.3
                 else:
                     stress **= 1.1   
+            # Case 4: Outside tolerable range but not catastrophic
             else:
-                # Out of range
                 dev_min = max(self.t_min - tmin, tmin - self.t_max, 0)
                 dev_max = max(self.t_min - tmax, tmax - self.t_max, 0)
                 normalized  = (dev_min + dev_max) / (2 * (self.t_max - self.t_min))
@@ -170,45 +181,69 @@ class Crop:
             total += stress
 
         months = max(harvest - sow, 1)
-        return min(total / months, 1.0)
+        return min(total / months, 1.0) # Normalize and cap stress at 1.0
 
     def get_rain_stress(self, climate: Climate) -> float:
+        """
+        Calculates rainfall stress on the crop during its growing season.
+
+        Returns a value between 0 (no stress) and 1 (maximum stress), 
+        based on how the total seasonal rainfall compares to the crop's 
+        acceptable rainfall range.
+        """
+        # Get sowing and harvesting months for slicing the climate data
         sow = self.sow_month
         harvest = self.harvest_month
+
+        # Calculate total rainfall during the growing season
         total_rain = sum(climate.get_rain(sow, harvest))
 
+        # If rainfall is within acceptable range → no stress
         if self.rain_min_mm <= total_rain <= self.rain_max_mm:
             return 0.0
-            
+
+        # If rainfall is below the minimum requirement    
         if total_rain < self.rain_min_mm:
             diff = self.rain_min_mm - total_rain
             range_ = self.rain_max_mm - self.rain_min_mm or 1  
-            stress = diff / range_
+            stress = diff / range_    
+        # If rainfall exceeds the maximum tolerable value
         else:
             diff = total_rain - self.rain_max_mm
             range_ = self.rain_max_mm - self.rain_min_mm or 1
             stress = diff / range_
 
+        # Cap the stress to a maximum of 1.0
         return min(stress, 1.0)
 
-    def get_moisture_stress(self, cell: Cell) -> float:
+    def get_moisture_stress(self, cell) -> float:
+        """
+        Calculates moisture stress for the crop based on irrigation level 
+        and available soil moisture in the cell.
+
+        Returns a float between 0 (no stress) and 1 (maximum stress).
+        """
+        # Mapping of irrigation level to water availability reduction factor.
         irrigation_effect = {
-            0: 1.0,
-            1: 0.6,
-            2: 0.3,
-            3: 0.0
+            0: 1.0, # no etc covered from irrigation
+            1: 0.6, # 40% of etc coverted from irrigation
+            2: 0.3, # 70% coverted from irrigation
+            3: 0.0 # 100% coverted from irrigation
         }
 
         irrigation_factor = irrigation_effect.get(cell.irrigation, 1.0)
-        required_water = self.etc_mm * irrigation_factor
+        required_water = self.etc_mm * irrigation_factor # Decrease required water based on irrigation
 
+        # If no water is required (e.g., full irrigation), no stress
         if required_water == 0:
             return 0.0
-        
+         
+        # If the soil has enough moisture to meet the demand
         if cell.soil_moisture >= required_water:
             cell.soil_moisture -= required_water
             return 0.0
         
+        # If moisture is not enough → calculate moisture deficit
         defict = required_water - cell.soil_moisture
         stress = defict / required_water
 

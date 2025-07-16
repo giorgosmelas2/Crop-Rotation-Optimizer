@@ -28,20 +28,61 @@ class Climate():
     
     # Get methods that returns the values between sowing and harvesting months
     def get_tmin(self, sow: int, harvest: int) -> list[float]:
-        return self.monthly_tmin[sow:harvest]
+        sow_idx = sow -1
+        harvest_idx = harvest - 1
+
+        if sow_idx <= harvest_idx:
+            return self.monthly_tmin[sow_idx:harvest_idx]
+        else:
+            return self.monthly_tmin[sow_idx:] + self.monthly_tmin[:harvest_idx]
+
     
     def get_tmax(self, sow: int, harvest: int) -> list[float]:
-        return self.monthly_tmax[sow:harvest]
+        sow_idx = sow -1
+        harvest_idx = harvest - 1
+
+        if sow_idx <= harvest_idx:
+            return self.monthly_tmax[sow_idx:harvest_idx]
+        else:
+            return self.monthly_tmax[sow_idx:] + self.monthly_tmax[:harvest_idx]
     
     def get_rain(self, sow: int, harvest: int) -> list[float]:
-        return self.monthly_rain[sow:harvest]
+        sow_idx = sow -1
+        harvest_idx = harvest - 1
+
+        if sow_idx <= harvest_idx:
+            return self.monthly_rain[sow_idx:harvest_idx]
+        else:
+            return self.monthly_rain[sow_idx:] + self.monthly_rain[:harvest_idx]
     
     def get_evap(self, sow: int, harvest: int) -> list[float]:
-        return self.monthly_evap[sow:harvest]
+        sow_idx = sow -1
+        harvest_idx = harvest - 1
+
+        if sow_idx <= harvest_idx:
+            return self.monthly_evap[sow_idx:harvest_idx]
+        else:
+            return self.monthly_evap[sow_idx:] + self.monthly_evap[:harvest_idx]
     
     def get_rh(self, sow: int, harvest: int) -> list[float]:
-        return self.monthly_rh[sow:harvest]    
+        sow_idx = sow -1
+        harvest_idx = harvest - 1
+
+        if sow_idx <= harvest_idx:
+            return self.monthly_rh[sow_idx:harvest_idx]
+        else:
+            return self.monthly_rh[sow_idx:] + self.monthly_rh[:harvest_idx]
  
+    
+    def __str__(self):
+        output = ["Climate data:"]
+        for i in range(12):
+            output.append(
+                f"Month {i+1:>2}: Tmin={self.monthly_tmin[i]:>5.1f}°C, "
+                f"Tmax={self.monthly_tmax[i]:>5.1f}°C, Rain={self.monthly_rain[i]:>6.1f}mm, "
+                f"Evap={self.monthly_evap[i]:>6.1f}mm, RH={self.monthly_rh[i]*100:>5.1f}%"
+            )
+        return "\n".join(output)
             
     
         

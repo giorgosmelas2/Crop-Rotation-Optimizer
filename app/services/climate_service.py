@@ -39,5 +39,5 @@ def get_climate_data(
     })
     
     climate = Climate.from_dataframe(df)
-
+    
     return climate

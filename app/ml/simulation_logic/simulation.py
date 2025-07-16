@@ -1,30 +1,26 @@
-from copy import deepcopy
-import json
-import os
-
 from app.ml.core_models.field import Field
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
 from app.ml.core_models.climate import Climate
 from app.ml.core_models.economics import Economics
+from app.agents.pest_simulation import PestSimulationManager
 
 from app.ml.simulation_logic.effects import update_soil_after_crop, update_soil_moisture_after_crop
-from app.ml.simulation_logic.evaluation import profit_evaluation
 
 from app.ml.evaluation.beneficial_rotations_evaluator import beneficial_rotations_evaluation
 from app.ml.evaluation.climate_evaluator import climate_evaluation
 from app.ml.evaluation.crop_rotation_evaluator import crop_rotation_evaluation
 from app.ml.evaluation.farmer_knowledge_evaluator import farmer_knowledge_evaluation
 from app.ml.evaluation.machinery_evaluator import machinery_evaluation
-
-from app.agents.pest_simulation import PestSimulationManager
+from app.ml.evaluation.profit_evaluator import profit_evaluation
 
 def simulate_crop_rotation( 
         field: Field, 
         climate: Climate, 
         crops: list[Crop], 
         pest_manager: PestSimulationManager,
-        farmer_knowledge: FarmerKnowledge, 
+        farmer_knowledge: FarmerKnowledge,
+        beneficial_rotations: list[list[str]],
         economic_data: list[Economics],
         missing_machinery: list[str],
         crops_required_machinery: dict[int, list[str]],
@@ -84,7 +80,7 @@ def simulate_crop_rotation(
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
             elif month == crop.harvest_month and not field.grid.is_field_empty():
                 # Evaluate total profit
-                yield_score = profit_evaluation(economic_data[crop.id], crop, field, climate)
+                yield_score = profit_evaluation(crop, field, economic_data[crop.id], climate, farmer_knowledge, beneficial_rotations)
                 total_yield_score += yield_score
                 print(f"Profit potential score for {crop.name}: {yield_score:.2f}")
 

@@ -1,4 +1,3 @@
-import pandas as pd
 from app.ml.core_models.climate import Climate
 from app.ml.core_models.crop import Crop
 
@@ -10,8 +9,11 @@ def climate_evaluation(climate: Climate, crop: Crop) -> float:
     temp_stress = crop.get_temperature_stress(climate)
     rain_stress = crop.get_rain_stress(climate)
 
+    # Test
+    print(f"Temperature stress: {temp_stress}")
+    print(f"Rain stress: {rain_stress}")
+
     # Combined stress
     total_stress = (0.6 * temp_stress) + (0.4 * rain_stress)
 
-    # Το score είναι το αντίθετο του stress
     return max(0.0, 1.0 - total_stress)
