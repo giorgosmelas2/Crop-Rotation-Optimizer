@@ -8,6 +8,7 @@ def create_default_cell_data(rotation_info: RotationInfo) -> dict:
         "k": rotation_info.k,
         "ph": rotation_info.ph,
         "soil_type": rotation_info.soil_type,
+        "soil_moisture": 0.0,
         "irrigation": rotation_info.irrigation,
         "fertilization": rotation_info.fertilization,
         "spraying": rotation_info.spraying,

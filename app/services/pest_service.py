@@ -7,7 +7,7 @@ def create_pest_agent(crop_names: list[str]) -> list[PestAgent]:
     for crop_name in crop_names:
         try:
             crop = supabase.table("crops") \
-                .select("crop_id,") \
+                .select("crop_id") \
                 .eq("crop_name", crop_name) \
                 .execute().data
             

@@ -1,4 +1,4 @@
-from random import randint
+from random import  sample, uniform
 import math
 from app.agents.pest_agent import PestAgent
 from app.ml.core_models.field import Field 
@@ -9,53 +9,73 @@ class PestSimulationManager:
         self.past_pest_agents = past_pest_agents
         self.agents_by_name = {agent.name: agent for agent in pest_agents}
 
-    def initialize_pest_agents(self, infection_rate: float, field: Field):
+    def initialize_past_pest_agents(self, field: Field):
         """
         Initialize pest agents in the field grid by placing them randomly in cells.
         """
+        rows = field.grid.rows
+        cols = field.grid.cols
+        total_cells = rows * cols
+        cells_with_pests = math.ceil(total_cells * 0.1)
 
-        total_cells = field.grid.rows * field.grid.cols
-        cells_with_pests = math.ceil(total_cells * infection_rate)
+        all_coords = [
+            (r, c)
+            for r, row in enumerate(field.grid.cell_grid)
+            for c in range(len(row))
+        ]
+        chosen = sample(all_coords, min(cells_with_pests, total_cells))
 
-        for _ in range(cells_with_pests):
-            row = randint(0, field.grid.rows - 1)
-            col = randint(0, len(field.grid.cell_grid[row]) - 1)
-            cell = field.grid.get_cell(row, col)
+        for (r, c) in chosen:
+            cell = field.grid.get_cell(r, c)
+            for past_agent in self.past_pest_agents:
+                if not cell.has_this_pest(past_agent.name):
+                    new_pest = PestAgent(
+                        name=past_agent.name,
+                        affected_crops=past_agent.affected_crops,
+                        affected_families=past_agent.affected_families,
+                        affected_orders=past_agent.affected_orders,
+                        lifespan=uniform(0.1, 1.0),
+                        row = r,
+                        col = c
+                    )
+                    cell.pests.append(new_pest)
+                    print(f"Initialized past pest {past_agent.name} at ({r}, {c})")
 
-            pest = self.agents_by_name.get(cell.current_crop.pest)
-
-            while cell.has_this_pest(pest.name):
-                row = randint(0, field.grid.rows - 1)
-                col = randint(0, len(field.grid.cell_grid[row]) - 1)
-                cell = field.grid.get_cell(row, col)
-
-                pest = self.agents_by_name.get(cell.current_crop.pest)
-            
-            new_pest = PestAgent(
-                name=pest.name,
-                affected_crops=pest.affected_crops,
-                affected_families=pest.affected_families,
-                affected_orders=pest.affected_orders,
-                lifespan=pest.lifespan,
-                spread_rate_same_family=pest.spread_rate_same_family,
-                spread_rate_same_order=pest.spread_rate_same_order,
-                decay_rate=pest.decay_rate,
-                spread_chance=pest.spread_chance
-            )
-            new_pest.row = row
-            new_pest.col = col
-            cell.pests.append(new_pest)
-            
-            print(f"Initialized pest {pest.name} at ({row}, {col})")
-
-
-    def initialize_past_pest_agents(self, field: Field):
+    def initialize_pest_agents(self, field: Field):
         """
         Adjust pest pressure based on the past crops planted by the user,
         simulating pre-existing pest presence.
         """
-        for _ in range(len(self.past_pest_agents)):
-            self.initialize_pest_agents(0.1, field)
+        rows = field.grid.rows
+        cols = field.grid.cols
+        total_cells = rows * cols
+        cells_with_pests = math.ceil(total_cells * 0.2)
+
+        all_coords = [
+            (r, c)
+            for r, row in enumerate(field.grid.cell_grid)
+            for c in range(len(row))
+        ]
+        chosen = sample(all_coords, min(cells_with_pests, total_cells))
+
+        for(r, c) in chosen:
+            cell = field.grid.get_cell(r, c)
+            pest_name = cell.current_crop.pest
+            pest_agent = self.agents_by_name.get(pest_name)
+            if pest_agent is None:
+                continue
+            if not cell.has_this_pest(pest_agent.name):
+                new_pest = PestAgent(
+                    name=pest_agent.name,
+                    affected_crops=pest_agent.affected_crops,
+                    affected_families=pest_agent.affected_families,
+                    affected_orders=pest_agent.affected_orders,
+                    lifespan=uniform(0.1, 1.0),
+                    row = r,
+                    col = c
+                )
+                cell.pests.append(new_pest)
+                print(f"Initialized past pest {pest_agent.name} at ({r}, {c})")
  
     def step(self, field: Field):
         for row in range(field.grid.rows):
@@ -66,7 +86,7 @@ class PestSimulationManager:
                         pest.apply_effect(cell)
                         pest.update_lifespan(cell)
                         if pest.is_alive():  # may have died from lifespan update
-                            pest.spread(cell, field)
+                            pest.spread(field)
                         else:
                             print(f"Pest {pest.name} at ({row}, {col}) died after lifespan update.")
                             cell.pests.remove(pest)

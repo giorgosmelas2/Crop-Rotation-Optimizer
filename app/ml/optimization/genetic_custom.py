@@ -1,5 +1,6 @@
 import random
 import statistics
+from copy import deepcopy
 from app.ml.core_models.crop import Crop
 from app.ml.simulation_logic.simulation import simulate_crop_rotation 
 
@@ -134,6 +135,10 @@ def run_ga_custom(
         mutation_rate=0.2,
         selection_method="tournament"
     ):
+
+    initial_field = field  
+    initial_pest_mgr = pest_manager
+
     population = initialize_population(crops, population_size, years)
     
     # Stats for plots
@@ -144,11 +149,14 @@ def run_ga_custom(
     fitness_scores = []
     pest_tracking = []
     for individual in population:
+        field_copy    = deepcopy(initial_field)
+        pest_mgr_copy = deepcopy(initial_pest_mgr)
+
         score, tracking = simulate_crop_rotation(
-            field, 
+            field_copy, 
             climate, 
             individual, 
-            pest_manager, 
+            pest_mgr_copy, 
             farmer_knowledge, 
             beneficial_rotations,
             economic_data,
@@ -197,11 +205,14 @@ def run_ga_custom(
         population = new_population[:population_size]
         fitness_scores = []
         for individual in population:
+            field_copy    = deepcopy(initial_field)
+            pest_mgr_copy = deepcopy(initial_pest_mgr)
+
             score, tracking = simulate_crop_rotation(
-                field, 
+                field_copy, 
                 climate, 
                 individual, 
-                pest_manager, 
+                pest_mgr_copy, 
                 farmer_knowledge, 
                 beneficial_rotations,
                 economic_data, 

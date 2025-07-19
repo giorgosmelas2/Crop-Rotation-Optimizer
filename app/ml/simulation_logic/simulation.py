@@ -68,6 +68,9 @@ def simulate_crop_rotation(
                     for col in range(len(field.grid.cell_grid[row])):
                         field.grid.sow_crop(row, col, crop)
 
+                # Initialize pest for current crop
+                pest_manager.initialize_pest_agents(field)
+
                 # Evaluate climate suitability for the crop
                 climate_score = climate_evaluation(climate, crop)
                 total_climate_score += climate_score
@@ -106,6 +109,7 @@ def simulate_crop_rotation(
                 for col in range(len(field.grid.cell_grid[row])):
                     month_key = f"{year + 1}-{month}"
                     cell = field.grid.get_cell(row, col)
+                    print(f"cell pest presure ({row}, {col}) = {cell.pest_pressure}")
                     if (row, col) not in pest_tracking:
                         pest_tracking[(row, col)] = {}
                     pest_tracking[(row, col)][month_key] = cell.pest_pressure

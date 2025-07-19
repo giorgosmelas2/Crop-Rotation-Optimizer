@@ -42,7 +42,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     cells = cell_create(rotation_info)
     field_grid = FieldGrid(cells=cells)
     field = Field(
-        area=rotation_info.area,
+        total_area=rotation_info.area,
         grid=field_grid
     )
 
@@ -70,16 +70,10 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     rotation_years = rotation_info.years
 
-    # print(f"crops: {crops}")
-    # print(f"field: {field}")
-    # print(f"farmer_knowledge: {farmer_knowledge}")
-    # print(f"climate_df: {climate_df}")
-    # print(f"economic_data: {economic_data}")
-
     best_rotation, score, gens_best_fitness, avg_fitness, variance_per_gen, best_tracking = optimize_rotation_plan(
         crops=crops,
         pest_manager=pest_manager,
-        field_state=field,
+        field=field,
         climate=climate,
         farmer_knowledge=farmer_knowledge,
         beneficial_rotations=beneficial_rotations,
@@ -90,9 +84,5 @@ async def create_rotation_plan(rotation_info: RotationInfo):
         years=rotation_years
     )
 
-    print(f"Best rotation: {best_rotation}\nScore: {score}\n")
-    # combined_fitness_plot(gens_best_fitness, avg_fitness)
-    # variance_plot(variance_per_gen)
-    # frames, month_keys = prepare_pest_frames(best_tracking)
-    # animate_pest_pressure(frames, month_keys)
+    print(f"Best rotation: {best_rotation}\nBest score: {score}\n")
     all_plots(gens_best_fitness, avg_fitness, variance_per_gen, best_tracking)

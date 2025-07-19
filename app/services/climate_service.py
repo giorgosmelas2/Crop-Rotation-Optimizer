@@ -30,14 +30,14 @@ def get_climate_data(
     months = [m for m in MONTH_ORDER if m in js["T2M_MIN"]]
 
     df = pd.DataFrame({
-        "month": list(range(1,13)),
-        "tmin": [js["T2M_MIN"][m] for m in months],
-        "tmax": [js["T2M_MAX"][m] for m in months],
-        "rain": [js["PRECTOTCORR"][m] for m in months],
-        "evap": [js["EVPTRNS"][m] for m in months],
-        "rh": [js["RH2M"][m] for m in months],
+        "month": list(range(1, 13)),
+        "tmin": [js["T2M_MIN"].get(m, 0.0) for m in MONTH_ORDER],
+        "tmax": [js["T2M_MAX"].get(m, 0.0) for m in MONTH_ORDER],
+        "rain": [js["PRECTOTCORR"].get(m, 0.0) for m in MONTH_ORDER],
+        "evap": [js["EVPTRNS"].get(m, 0.0) for m in MONTH_ORDER],   
+        "rh":   [js["RH2M"].get(m, 0.0) for m in MONTH_ORDER],      
     })
-    
+        
     climate = Climate.from_dataframe(df)
     
     return climate
