@@ -129,8 +129,8 @@ def run_ga_custom(
         crops_required_machinery,
         past_crops,
         years,
-        population_size=5,
-        generations=5,
+        population_size=20,
+        generations=10,
         crossover_rate=0.7,
         mutation_rate=0.2,
         selection_method="tournament"
@@ -147,12 +147,11 @@ def run_ga_custom(
     variance_per_gen = []
 
     fitness_scores = []
-    pest_tracking = []
     for individual in population:
         field_copy    = deepcopy(initial_field)
         pest_mgr_copy = deepcopy(initial_pest_mgr)
 
-        score, tracking = simulate_crop_rotation(
+        score = simulate_crop_rotation(
             field_copy, 
             climate, 
             individual, 
@@ -166,12 +165,10 @@ def run_ga_custom(
             years
         )
         fitness_scores.append(score)
-        pest_tracking.append(tracking)
 
     idx = fitness_scores.index(max(fitness_scores))
     best_score = fitness_scores[idx]
     best_individual = population[idx]
-    best_tracking = pest_tracking[idx]
 
     gens_best_fitness.append(best_score)
 
@@ -181,7 +178,6 @@ def run_ga_custom(
     gen_variance = statistics.variance(fitness_scores)
     variance_per_gen.append(gen_variance)
     
-    logbook = []
 
     # --- Generations ---
     for gen in range(generations):
@@ -208,7 +204,7 @@ def run_ga_custom(
             field_copy    = deepcopy(initial_field)
             pest_mgr_copy = deepcopy(initial_pest_mgr)
 
-            score, tracking = simulate_crop_rotation(
+            score = simulate_crop_rotation(
                 field_copy, 
                 climate, 
                 individual, 
@@ -222,12 +218,10 @@ def run_ga_custom(
                 years
             )
             fitness_scores.append(score) 
-            pest_tracking.append(tracking)
         
         idx = fitness_scores.index(max(fitness_scores))
         gen_best = population[idx]
         gen_best_score = fitness_scores[idx]
-        gen_best_tracking = pest_tracking[idx]
 
         gens_best_fitness.append(gen_best_score)
         
@@ -240,10 +234,9 @@ def run_ga_custom(
         if gen_best_score > best_score:
             best_score = gen_best_score
             best_individual = gen_best
-            best_tracking = gen_best_tracking
 
 
-    return best_individual, best_score, gens_best_fitness, avg_fitness, variance_per_gen, best_tracking
+    return best_individual, best_score, gens_best_fitness, avg_fitness, variance_per_gen
 
 
 

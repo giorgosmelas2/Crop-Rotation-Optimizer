@@ -129,7 +129,7 @@ class Crop:
             f"n_ret: {self.n_ret}",
             f"p_ret: {self.p_ret}",
             f"k_ret: {self.k_ret}",
-            f"pest: {self.pest}",
+            f"pest: {self.pest}", 
         ]) + "\n)"
     
     def get_temperature_stress(self, climate: Climate) -> float:
@@ -180,7 +180,10 @@ class Crop:
               
             total += stress
 
-        months = max(harvest - sow, 1)
+        if harvest > sow:
+            months = harvest - sow
+        else:
+            months = 12 - sow + harvest 
         return min(total / months, 1.0) # Normalize and cap stress at 1.0
 
     def get_rain_stress(self, climate: Climate) -> float:

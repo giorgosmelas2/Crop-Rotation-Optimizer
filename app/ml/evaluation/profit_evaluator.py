@@ -13,7 +13,7 @@ def profit_evaluation(
         beneficial_rotations: list[list[str]]
 ) -> float:
     """
-    Evaluate the profit potential of a crop based on economic data, climate and field conditions.
+    Evaluate the profit potential of a crop based on economic data, climate and field conditions. Best 1.0 
     """
     total_field_area = field.grid.get_total_area()
     max_yield = economic.kg_yield_per_acre 
@@ -59,7 +59,7 @@ def profit_evaluation(
             # Farmer knowledge boost or decrease
             prev_crop = cell.crop_history[-1] if cell.crop_history else None
             if prev_crop:
-                knowledge_multiplier = farmer_knowledge_multiplier(prev_crop, crop.name, farmer_knowledge)
+                knowledge_multiplier = farmer_knowledge_multiplier(prev_crop.name, crop.name, farmer_knowledge)
             else:
                 knowledge_multiplier = 1.0
 
@@ -92,9 +92,10 @@ def profit_evaluation(
     else:
         normalized_profit = 0.0
    
+    normalized_profit = min(normalized_profit, 1.0)
     return normalized_profit
 
-# ---Helper function that are need from yield evaluation ---
+# ---Helper functions that are need from yield evaluation ---
 
 def nutrient_penalty_factor(
     n_required: float, n_actual: float,
@@ -142,7 +143,6 @@ def farmer_knowledge_multiplier(prev_crop: str, current_crop: str, farmer_knowle
         return 1.0 + 0.09 * value  
     elif pair in uneffective:
         value = uneffective[pair]
-
         return 1.0 - 0.09 * value  
     else:
         return 1.0
@@ -150,7 +150,6 @@ def farmer_knowledge_multiplier(prev_crop: str, current_crop: str, farmer_knowle
 
 def benefial_rotations_multiplier(beneficial_rotations: list[list[str]], crop_name: str, past_crops: list[str]) -> float:
     rotation = [crop_name]
-
     for past_crop in reversed(past_crops):
         rotation.insert(0, past_crop)
         if rotation in beneficial_rotations:

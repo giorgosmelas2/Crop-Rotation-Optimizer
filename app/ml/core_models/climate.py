@@ -32,9 +32,9 @@ class Climate():
         harvest_idx = harvest - 1
 
         if sow_idx <= harvest_idx:
-            return self.monthly_tmin[sow_idx:harvest_idx]
+            return self.monthly_tmin[sow_idx:harvest_idx + 1]
         else:
-            return self.monthly_tmin[sow_idx:] + self.monthly_tmin[:harvest_idx]
+            return self.monthly_tmin[sow_idx:] + self.monthly_tmin[:harvest_idx + 1]
 
     
     def get_tmax(self, sow: int, harvest: int) -> list[float]:
@@ -42,36 +42,36 @@ class Climate():
         harvest_idx = harvest - 1
 
         if sow_idx <= harvest_idx:
-            return self.monthly_tmax[sow_idx:harvest_idx]
+            return self.monthly_tmax[sow_idx:harvest_idx + 1]
         else:
-            return self.monthly_tmax[sow_idx:] + self.monthly_tmax[:harvest_idx]
+            return self.monthly_tmax[sow_idx:] + self.monthly_tmax[:harvest_idx + 1]
     
     def get_rain(self, sow: int, harvest: int) -> list[float]:
         sow_idx = sow -1
         harvest_idx = harvest - 1
 
         if sow_idx <= harvest_idx:
-            return self.monthly_rain[sow_idx:harvest_idx]
+            return self.monthly_rain[sow_idx:harvest_idx + 1]
         else:
-            return self.monthly_rain[sow_idx:] + self.monthly_rain[:harvest_idx]
+            return self.monthly_rain[sow_idx:] + self.monthly_rain[:harvest_idx + 1] 
     
     def get_evap(self, sow: int, harvest: int) -> list[float]:
         sow_idx = sow -1
         harvest_idx = harvest - 1
 
         if sow_idx <= harvest_idx:
-            return self.monthly_evap[sow_idx:harvest_idx]
+            return self.monthly_evap[sow_idx:harvest_idx + 1]
         else:
-            return self.monthly_evap[sow_idx:] + self.monthly_evap[:harvest_idx]
+            return self.monthly_evap[sow_idx:] + self.monthly_evap[:harvest_idx + 1]
     
     def get_rh(self, sow: int, harvest: int) -> list[float]:
         sow_idx = sow -1
         harvest_idx = harvest - 1
 
         if sow_idx <= harvest_idx:
-            return self.monthly_rh[sow_idx:harvest_idx]
+            return self.monthly_rh[sow_idx:harvest_idx + 1]
         else:
-            return self.monthly_rh[sow_idx:] + self.monthly_rh[:harvest_idx]
+            return self.monthly_rh[sow_idx:] + self.monthly_rh[:harvest_idx + 1]
  
     
     def __str__(self):

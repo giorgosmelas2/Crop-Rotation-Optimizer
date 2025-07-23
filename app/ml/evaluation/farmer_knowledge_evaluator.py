@@ -4,6 +4,7 @@ from app.ml.core_models.crop import Crop
 def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: list[Crop], past_crops: list[str]) -> float:
     """
     Evaluate the farmer's knowledge based on the crop's requirements and the farmer's knowledge.
+    1.0 means the rotations has all of the farmers suggetions 0.0 means n'one of them
     """
     crop_names = [crop.name for crop in crops]
 

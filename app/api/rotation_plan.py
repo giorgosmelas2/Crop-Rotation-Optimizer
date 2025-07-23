@@ -70,7 +70,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     rotation_years = rotation_info.years
 
-    best_rotation, score, gens_best_fitness, avg_fitness, variance_per_gen, best_tracking = optimize_rotation_plan(
+    best_rotation, score, gens_best_fitness, avg_fitness, variance_per_gen = optimize_rotation_plan(
         crops=crops,
         pest_manager=pest_manager,
         field=field,
@@ -85,4 +85,4 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     )
 
     print(f"Best rotation: {best_rotation}\nBest score: {score}\n")
-    all_plots(gens_best_fitness, avg_fitness, variance_per_gen, best_tracking)
+    all_plots(gens_best_fitness, avg_fitness, variance_per_gen)

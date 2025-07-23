@@ -101,8 +101,8 @@ class PestAgent:
         elif current_crop.order in self.affected_orders:
             rate = self.spread_rate_same_order
         else:
-            cell.pest_pressure -= self.decay_rate * (1 + spraying_effect[spraying_level])
-            cell.pest_pressure = max(cell.pest_pressure, 0.0)
+            decay = self.decay_rate * (1 + spraying_effect[spraying_level])
+            cell.pest_pressure = max(cell.pest_pressure - decay, 0.0)
             return
 
         # Decrease of the spread rate based on spraying level
@@ -155,6 +155,8 @@ class PestAgent:
                     self.lifespan += self.lifespan_increase * 0.05
         else:
             print(f"{self.name} has died in cell ({self.row}, {self.col})")
+        
+        self.lifespan = max(0.0, min(self.lifespan, 1.0))
         
     def __repr__(self):
         return (
