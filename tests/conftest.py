@@ -1,4 +1,5 @@
 import pytest
+import random
 from app.models.rotation_input import RotationInfo
 from app.models.coordinates import Coordinates
 from app.ml.core_models.crop import Crop
@@ -123,9 +124,9 @@ def dummy_crops():
 @pytest.fixture
 def dummy_climate():
     return Climate(
-        monthly_tmin=[15.0]*12,
-        monthly_tmax=[17.0]*12,
-        monthly_rain=[400.0]*12,
+        monthly_tmin=[40.0]*12,
+        monthly_tmax=[50.0]*12,
+        monthly_rain=[0.0]*12,
         monthly_evap=[50.0]*12,
         monthly_rh=[0.6]*12
     )
@@ -137,7 +138,7 @@ def dummy_field(dummy_rotation_info):
     cells = cell_create(dummy_rotation_info)
     field_grid = FieldGrid(cells=cells)
     return Field(
-        total_area=9.0,
+        total_area=12.0,
         grid=field_grid 
     )
 
@@ -150,7 +151,7 @@ def dummy_cell():
         k=3.0,
         ph=6.5,
         soil_type="loamy",
-        soil_moisture=1000.0,
+        soil_moisture=100.0,
         irrigation=1,
         fertilization=1,
         spraying=1,
@@ -191,15 +192,15 @@ def dummy_rotation_info():
     return RotationInfo(
         crops=["Σιτάρι", "Λούπινο"],
         coordinates=Coordinates(lat=39.0, lng=22.0),
-        area=9.0,
+        area=12.0,
         soil_type="loamy",
         irrigation=1,
         fertilization=1,
         spraying=1,
-        n=70,
-        p=50,
-        k=60,
-        ph=6.5,
+        n=0,
+        p=0,
+        k=0,
+        ph=4.0,
         machinery=["Θεριζοαλωνιστική"],
         past_crops=["Βαμβάκι", "Καλαμπόκι"],
         effective_pairs=[CropPair(crop1="Σιτάρι", crop2="Λούπινο", value=1)],
@@ -463,3 +464,258 @@ def dummy_beneficial_rotations():
         ["Καλαμπόκι", "Φασόλια", "Μηδική"],  
         ["Ρύζι", "Φασόλια"],                
     ]
+
+"""
+----------------------------------
+     RANDOM VALUES TO TEST GA
+----------------------------------
+"""
+crops = [
+    "Σκληρό σιτάρι",
+    "Κριθάρι",
+    "Αραβόσιτος",
+    "Σόργος",
+    "Ρύζι",
+    "Βαμβάκι",
+    "Ηλιοτρόπιο",
+    "Ελαιόκαμβη",
+    "Σουσάμι",
+    "Κνήκος",
+    "Σόγια",
+    "Ρεβίθι",
+    "Φακή",
+    "Κούκι", 
+    "Κτηνοτροφικό μπιζέλι", 
+    "Μηδική",
+    "Πατάτα",
+    "Τομάτα",
+    "Αγγούρι",
+    "Καρπούζι",
+    "Πεπόνι",
+    "Πιπερία",
+    "Μελιτζάνα",
+    "Κρεμμύδι",
+    "Σκόρδο",
+    "Καρότο",
+    "Μαρούλι", 
+    "Σπανάκι", 
+    "Λάχανο", 
+    "Μπρόκολο"
+]
+unique_machinery = [
+    "Τρακτέρ",
+    "Αλέτρι",
+    "Δισκοσβάρνα",
+    "Ψεκαστικό",
+    "Σπαρτική",
+    "Θεριζοαλωνιστική",
+    "Λιπασματοδιανομέας",
+    "Καλλιεργητής",
+    "Καλαμποκοσυλλεκτική",
+    "Σύστημα άρδευσης",
+    "Φρέζα",
+    "Χορτοσυλλεκτικό",
+    "Χορτοκοπτικό (κοπτικό δίσκου ή μπάρας)",
+    "Πατατοφυτευτική",
+    "Πατατοσυλλεκτική",
+    "Φυτευτική μηχανή",
+    "Συλλεκτικό μηχάνημα για κρεμμύδια",
+    "Μηχάνημα εκρίζωσης σκόρδων",
+    "Συλλεκτική μηχανή καρότων",
+    "Χειρωνακτική συγκομιδή",
+    "Εξαλακωτής",
+    "Συγκομιστική μηχανή τεύτλων",
+    "Θεριζοαλωνιστική (hempseed)",
+    "Μεταφορικό μέσω (hempseed)",
+    "Θεριστική μπάρας ή κοπτικό μηχάνημα (fiber)",
+    "Μηχανή εναπόθεσης (fiber)",
+    "Μηχανή συμπίεσης ή δεματοποίησης (fiber)",
+    "Αναστροφέας",
+    "Συγκομιστική μηχανή φιστικιών",
+    "Φυτευτική Καπνού",
+    "Καλλιεργητής (ή καλλιεργητής με φρέζα)",
+    "Κοπτικό Καπνού",
+    "Αποξηραντήριο",
+    "Χορτοκοπτικό μηχάνημα"
+]
+
+
+@pytest.mark.fixture
+def random_dummy_climate():
+    return Climate(
+        monthly_tmin=[
+            random.uniform(0, 6),     
+            random.uniform(1, 7),    
+            random.uniform(4, 9),    
+            random.uniform(8, 12),   
+            random.uniform(12, 17),   
+            random.uniform(17, 22),   
+            random.uniform(20, 25),   
+            random.uniform(20, 25),   
+            random.uniform(16, 21),  
+            random.uniform(12, 17),  
+            random.uniform(7, 12),   
+            random.uniform(3, 8)     
+        ],
+        monthly_tmax=[
+            random.uniform(10, 14),   
+            random.uniform(11, 15),   
+            random.uniform(14, 19),   
+            random.uniform(18, 23),   
+            random.uniform(23, 28),  
+            random.uniform(28, 33),   
+            random.uniform(32, 38),   
+            random.uniform(32, 38),  
+            random.uniform(27, 32),   
+            random.uniform(21, 26),   
+            random.uniform(15, 20),   
+            random.uniform(11, 16)    
+        ],
+        monthly_rain=[
+            random.randint(60, 120),  
+            random.randint(50, 100), 
+            random.randint(40, 90),   
+            random.randint(30, 70),   
+            random.randint(10, 40),   
+            random.randint(0, 25),    
+            random.randint(0, 20), 
+            random.randint(0, 20),    
+            random.randint(10, 40),  
+            random.randint(30, 80),   
+            random.randint(50, 100), 
+            random.randint(60, 120)   
+        ],
+        monthly_evap=[
+            random.uniform(30, 50),    
+            random.uniform(35, 55),    
+            random.uniform(50, 80),   
+            random.uniform(60, 90),    
+            random.uniform(90, 130),   
+            random.uniform(110, 150),  
+            random.uniform(130, 180), 
+            random.uniform(120, 160),  
+            random.uniform(90, 130),   
+            random.uniform(60, 90),    
+            random.uniform(40, 70),   
+            random.uniform(30, 60)     
+        ],
+        monthly_rh=[
+            random.uniform(0.7, 0.9),   
+            random.uniform(0.65, 0.85),
+            random.uniform(0.6, 0.8),
+            random.uniform(0.55, 0.75),
+            random.uniform(0.5, 0.7),
+            random.uniform(0.4, 0.6),
+            random.uniform(0.3, 0.5),
+            random.uniform(0.35, 0.55),
+            random.uniform(0.45, 0.65),
+            random.uniform(0.55, 0.75),
+            random.uniform(0.6, 0.8),
+            random.uniform(0.65, 0.85)  
+        ]
+    )
+
+@pytest.fixture
+def random_dummy_field(random_dummy_rotation_info):
+    cells = cell_create(random_dummy_rotation_info)
+    field_grid = FieldGrid(cells=cells)
+    return Field(
+        total_area=12.0,
+        grid=field_grid 
+    )
+
+def random_dummy_rotation_info():
+    return RotationInfo(
+        crops=["Σιτάρι", "Λούπινο"],
+        coordinates=Coordinates(lat=39.0, lng=22.0),
+        area=12.0,
+        soil_type="loamy",
+        irrigation=random.choice([0, 1, 2, 3]),
+        fertilization=([0, 1, 2, 3]),
+        spraying=([0, 1, 2, 3]),
+        n=random.uniform(5.0, 80.0),
+        p=random.uniform(3.0, 15.0),
+        k=random.uniform(2.0, 25.0),
+        ph=random.uniform(5.5, 8.5),
+        machinery=["Θεριζοαλωνιστική"],
+        past_crops=["Βαμβάκι", "Καλαμπόκι"],
+        effective_pairs=[CropPair(crop1="Σιτάρι", crop2="Λούπινο", value=1)],
+        uneffective_pairs=[CropPair(crop1="Βαμβάκι", crop2="Ρύζι", value=-1)],
+        years=3
+    )
+
+@pytest.fixture
+def random_dummy_years():
+    return random.randint(3, 10)
+
+@pytest.fixture
+def random_dummy_farmer_knowledge():
+    eff_len = random.randint(1, 4)
+    unEff_len = random.randint(1,4)
+
+    effective_pairs = []
+    uneffctive_pairs = []
+
+    for _ in range(eff_len):
+        crop1 = random.choice(crops)
+        crop2 = random.choice(crops)
+        value = random.randint(1,3)
+
+        while crop1 == crop2:
+            crop2 = random.choice(crops)
+        
+        pair = CropPair(crop1=crop1, crop2=crop2, value=value)
+        effective_pairs.append(pair)
+
+    for _ in range(unEff_len):
+        crop1 = random.choice(crops)
+        crop2 = random.choice(crops)
+        value = random.randint(1,3)
+
+        while crop1 == crop2:
+            crop2 = random.choice(crops)
+        
+        pair = CropPair(crop1=crop1, crop2=crop2, value=value)
+        uneffctive_pairs.append(pair)
+    
+    return FarmerKnowledge(
+        effective_pairs=effective_pairs,
+        uneffective_pairs=uneffctive_pairs,
+        past_crops=[]
+    )
+    
+
+@pytest.fixture
+def random_dummy_beneficial_rotations():
+    num_rotations = random.randint(1, 5)
+    beneficial_rotations = []
+    for _ in range(num_rotations):
+        rotation_len = random.randint(2, 5)
+        rotation = []
+        for _ in range(rotation_len):
+            crop = random.choice(crops)
+            rotation.append(crop)
+        
+        beneficial_rotations.append(rotation)
+
+
+    return beneficial_rotations
+
+@pytest.fixture
+def random_dummy_missing_machinery():
+    num_missing = random.randint(1,4)
+    missing_machinery = []
+
+    for _ in range(num_missing):
+        machinery = random.choice(unique_machinery)
+        while machinery in missing_machinery:
+            machinery = random.choice(unique_machinery)
+        missing_machinery.append(machinery)
+
+    return missing_machinery
+
+@pytest.fixture
+def random_dummy_past_crops():
+    crop1 = random.choice(crops)
+    crop2 = random.choice(crops)
+    return [crop1, crop2]

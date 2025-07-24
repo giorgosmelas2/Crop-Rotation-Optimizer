@@ -89,7 +89,6 @@ class PestAgent:
    
         current_crop = cell.current_crop
         if not current_crop:
-            print(f"No crop in cell")
             cell.pest_pressure -= self.decay_rate
             cell.pest_pressure = max(cell.pest_pressure, 0.0)
             return

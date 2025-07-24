@@ -1,8 +1,22 @@
+import logging
 from app.ml.core_models.climate import Climate
 from app.ml.core_models.field import Field
 from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
+
+logger = logging.getLogger("crop_rotation")
+logger.setLevel(logging.DEBUG)
+
+WEIGHTS = {
+    "temp": 0.20,       # θερμοκρασία
+    "rain": 0.15,       # βροχόπτωση
+    "moisture": 0.20,   # υγρασία εδάφους
+    "pest": 0.15,       # πίεση παρασίτων
+    "nutrient": 0.15,   # θρεπτικά
+    "ph": 0.10,         # pH
+    "soil": 0.05        # τύπος εδάφους
+}
 
 def profit_evaluation(
         crop: Crop, 
@@ -13,7 +27,8 @@ def profit_evaluation(
         beneficial_rotations: list[list[str]]
 ) -> float:
     """
-    Evaluate the profit potential of a crop based on economic data, climate and field conditions. Best 1.0 
+    Evaluate the profit potential of a crop based on economic data, climate and field conditions. 
+    Best 1.0 
     """
     total_field_area = field.grid.get_total_area()
     max_yield = economic.kg_yield_per_acre 
@@ -30,8 +45,7 @@ def profit_evaluation(
 
             moisture_factor = crop.get_moisture_stress(cell)
             pest_factor = cell.pest_pressure
-
-            nutrient_factor =  nutrient_penalty_factor(
+            nutrient_factor = nutrient_penalty_factor(
                 crop.n,
                 cell.n,
                 crop.p,
@@ -39,18 +53,25 @@ def profit_evaluation(
                 crop.k,
                 cell.k
             )
-
             soil_factor = soil_type_penalty(crop.soil_type, cell.soil_type)
             ph_factor = ph_penalty(crop.ph_min, crop.ph_max, cell.ph)
 
+            logger.debug(f"temp_factor = {temp_factor}")
+            logger.debug(f"rain_factor = {rain_factor}")
+            logger.debug(f"moisture_factor = {moisture_factor}")
+            logger.debug(f"pest_factor = {pest_factor}")
+            logger.debug(f"nutrient_factor = {nutrient_factor}")
+            logger.debug(f"ph_factor = {ph_factor}")
+            logger.debug(f"soil_factor = {soil_factor}")
+
             yield_penalty = (
-                temp_factor ** 1.0 *
-                rain_factor ** 1.0 *
-                moisture_factor ** 1.2 *
-                (1.0 - pest_factor) ** 1.3 * 
-                (1.0 - nutrient_factor) ** 1.5 *
-                (1.0 - ph_factor) ** 1.3 *
-                (1.0 - soil_factor) ** 1.1 
+                WEIGHTS["temp"] * temp_factor +
+                WEIGHTS["rain"] * rain_factor +
+                WEIGHTS["moisture"] * moisture_factor +
+                WEIGHTS["pest"] * pest_factor +
+                WEIGHTS["nutrient"] * nutrient_factor +
+                WEIGHTS["ph"] * ph_factor +
+                WEIGHTS["soil"] * soil_factor 
             )
 
             cell_yield  += max_yield * (1.0 - yield_penalty)
@@ -92,7 +113,7 @@ def profit_evaluation(
     else:
         normalized_profit = 0.0
    
-    normalized_profit = min(normalized_profit, 1.0)
+    normalized_profit = max(min(normalized_profit, 1.0), 0.0)
     return normalized_profit
 
 # ---Helper functions that are need from yield evaluation ---

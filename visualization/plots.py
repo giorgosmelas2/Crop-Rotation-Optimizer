@@ -104,11 +104,8 @@ def animate_pest_pressure(frames, month_keys, save_path: str = None):
     # else:
     #     plt.show()
 
-def all_plots(gens_best_fitness, avg_fitness, variance_per_gen, pest_tracking, save_path=None):
+def all_plots(gens_best_fitness, avg_fitness, variance_per_gen):
     combined_fitness_plot(gens_best_fitness, avg_fitness)
     variance_plot(variance_per_gen)
-
-    frames, month_keys = prepare_pest_frames(pest_tracking)
-    animate_pest_pressure(frames, month_keys, save_path)
 
     plt.show()

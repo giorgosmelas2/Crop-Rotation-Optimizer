@@ -38,6 +38,31 @@ def simulate_crop_rotation(
         years: int
     ) -> tuple[float, dict]:
 
+    """
+    Simulates a multi-year crop rotation and evaluates its overall performance.
+
+    This function performs month-by-month simulation of crop growth,
+    pest pressure, soil and moisture dynamics, and evaluates each crop
+    for profitability, climate suitability, machinery availability, and rotation benefits.
+
+    For each crop:
+      - Sowing and harvesting are simulated in the correct months.
+      - Pests are initialized and spread over time.
+      - Soil nutrients and moisture are updated after harvesting.
+      - Multiple evaluation scores are computed per crop.
+
+    Final score is a weighted combination of:
+      - Profitability (40%)
+      - Farmer knowledge effectiveness (19%)
+      - Beneficial rotation sequences (12%)
+      - Climate suitability (11%)
+      - Crop rotation health (root depth & legumes) (10%)
+      - Machinery availability (8%)
+
+    Returns:
+        total_score (float): Final normalized score of the rotation (0.0-1.0).
+    """
+
     total_score = 0.0
 
     total_crops = len(crops)
@@ -47,7 +72,7 @@ def simulate_crop_rotation(
     beneficial_rotations_score = beneficial_rotations_evaluation(crops, past_crops)
     crop_rotation_score = crop_rotation_evaluation(crops)
     
-    total_yield_score = 0.0
+    total_profit_score = 0.0
     total_climate_score = 0.0
     total_machinery_score = 0.0
 

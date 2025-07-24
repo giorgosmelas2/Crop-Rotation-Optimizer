@@ -36,4 +36,4 @@ def farmer_knowledge_evaluation(farmer_knowledge: FarmerKnowledge, crops: list[C
     max_score_possible = len(crop_pairs) * 3  
     normalized_score = (score + max_score_possible) / (2 * max_score_possible)
 
-    return normalized_score
+    return max(normalized_score, 0.0)

@@ -1,6 +1,12 @@
 from app.ml.core_models.crop import Crop
 
 def crop_rotation_evaluation(crops: list[Crop]) -> float:
+    """
+    Score a crop rotation on two criteria:
+      • Root-depth alternation (30%): fraction of adjacent pairs differing ≥30cm.
+      • Legume frequency (70%): penalize runs of ≥3 non-legumes.
+    Returns a 0.0-1.0 score (1.0 if fewer than two crops).
+    """
     # Avoid evaluation if less than 2 crops (no rotation can be evaluated)
     if len(crops) < 2:
         return 1.0 

@@ -130,7 +130,7 @@ def run_ga_custom(
         past_crops,
         years,
         population_size=20,
-        generations=10,
+        generations=15,
         crossover_rate=0.7,
         mutation_rate=0.2,
         selection_method="tournament"

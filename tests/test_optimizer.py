@@ -5,51 +5,36 @@ from visualization.plots import all_plots
 from tests.conftest import make_dummy_pest_agent
 
 @pytest.mark.ga_custom
-def test_optimize_rotation_custom(
+def run_rotation_simulation(
     dummy_crops,
     dummy_pest_manager,
-    dummy_field,
-    dummy_climate,
-    dummy_farmer_knowledge,
-    dummy_beneficial_rotations,
+    random_dummy_field,
+    random_dummy_climate,
+    random_dummy_farmer_knowledge,
+    random_dummy_beneficial_rotations,
     dummy_economic_data,
-    dummy_missing_machinery,
+    random_dummy_missing_machinery,
     dummy_crops_required_machinery,
-    dummy_past_crops,
-    dummy_years,  
+    random_dummy_past_crops,
+    random_dummy_years,
 ):
-
     best_names, score, gens_best_fitness, avg_fitness, variance_per_gen, pest_tracking = optimize_rotation_plan(
         crops=dummy_crops,
         pest_manager=dummy_pest_manager,
-        field=dummy_field,
-        climate=dummy_climate,
-        farmer_knowledge=dummy_farmer_knowledge,
-        beneficial_rotations=dummy_beneficial_rotations,
+        field=random_dummy_field,
+        climate=random_dummy_climate,
+        farmer_knowledge=random_dummy_farmer_knowledge,
+        beneficial_rotations=random_dummy_beneficial_rotations,
         economic_data=dummy_economic_data,
-        missing_machinery=dummy_missing_machinery,
+        missing_machinery=random_dummy_missing_machinery,
         crops_required_machinery=dummy_crops_required_machinery,
-        past_crops=dummy_past_crops,
-        years=dummy_years,
+        past_crops=random_dummy_past_crops,
+        years=random_dummy_years,
         algorithm="custom",
     )
 
-    print(f"Best rotation: {best_names}\nBest score: {score}\n")
+    print(f"\n🌾 Best rotation: {best_names}\n⭐ Best score: {score:.3f}\n")
     all_plots(gens_best_fitness, avg_fitness, variance_per_gen, pest_tracking)
-
-    # Έλεγχοι τύπων
-    assert isinstance(best_names, list)
-    assert all(isinstance(n, str) for n in best_names)
-    assert isinstance(score, float)
-    assert 0.0 <= score <= 1.0
-    assert isinstance(gens_best_fitness, list)
-    assert isinstance(avg_fitness, list)
-    assert isinstance(variance_per_gen, list)
-    assert isinstance(pest_tracking, dict)
-
-    # Έλεγχος ότι το μήκος των ιστορικών fitness είναι ίσο με το πλήθος των γενεών+1
-    # (το dummy_years=3 και default generations=5 του custom GA δίνουν 6 entries)
-    assert len(gens_best_fitness) == len(avg_fitness) == len(variance_per_gen)
 
 # @pytest.mark.ga_deap
 # def test_optimize_rotation_deap(

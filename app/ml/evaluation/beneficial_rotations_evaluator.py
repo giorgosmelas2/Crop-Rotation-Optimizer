@@ -2,6 +2,9 @@ from app.ml.core_models.crop import Crop
 from app.services.beneficial_rotations_service import get_beneficial_rotations
 
 def beneficial_rotations_evaluation(crops: list[Crop], past_crops: list[str]) -> float:
+    """
+    Checks if the the rotations of the GA has any efficient rotations 
+    """
     beneficial_rotations = get_beneficial_rotations()
 
     crop_names = [crop.name for crop in crops]
