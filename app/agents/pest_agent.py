@@ -152,8 +152,8 @@ class PestAgent:
                     self.lifespan += self.lifespan_increase * 0.1
                 elif pre_past_crop.order in self.affected_orders:
                     self.lifespan += self.lifespan_increase * 0.05
-        else:
-            print(f"{self.name} has died in cell ({self.row}, {self.col})")
+        # else:
+            # print(f"{self.name} has died in cell ({self.row}, {self.col})")
         
         self.lifespan = max(0.0, min(self.lifespan, 1.0))
         

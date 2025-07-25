@@ -139,12 +139,14 @@ def simulate_crop_rotation(
     final_climate_score = total_climate_score / num_evaluated_crops
     final_machinery_score = total_machinery_score / num_evaluated_crops
 
+    logger.info("-----------------------------------------------------")
     logger.debug(f"final_profit_score: {final_profit_score}")
     logger.debug(f"final_climate_score: {final_climate_score}")
     logger.debug(f"final_machinery_score: {final_machinery_score}")
     logger.debug(f"farmer_knowledge_score: {farmer_knowledge_score}")
     logger.debug(f"beneficial_rotations_score: {beneficial_rotations_score}")
     logger.debug(f"crop_rotation_score: {crop_rotation_score}")
+    logger.info("-----------------------------------------------------")
 
     total_score = (
         0.4 * final_profit_score +

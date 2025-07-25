@@ -129,11 +129,11 @@ def run_ga_custom(
         crops_required_machinery,
         past_crops,
         years,
-        population_size=20,
-        generations=15,
+        population_size=50,
+        generations=30,
         crossover_rate=0.7,
         mutation_rate=0.2,
-        selection_method="tournament"
+        selection_method="rank"
     ):
 
     initial_field = field  
@@ -143,8 +143,10 @@ def run_ga_custom(
     
     # Stats for plots
     gens_best_fitness = []
-    avg_fitness = []
-    variance_per_gen = []
+    gens_worst_fitness = []
+    gens_avg_fitness = []
+    gens_variance = []
+    gens_all_fitness = []
 
     fitness_scores = []
     for individual in population:
@@ -165,19 +167,16 @@ def run_ga_custom(
             years
         )
         fitness_scores.append(score)
+    
+    gens_all_fitness.append(fitness_scores.copy())
+    gens_best_fitness.append(max(fitness_scores))
+    gens_worst_fitness.append(min(fitness_scores))
+    gens_avg_fitness.append(sum(fitness_scores) / len(fitness_scores))
+    gens_variance.append(statistics.variance(fitness_scores))
 
     idx = fitness_scores.index(max(fitness_scores))
     best_score = fitness_scores[idx]
     best_individual = population[idx]
-
-    gens_best_fitness.append(best_score)
-
-    gen_avg_fitness = sum(fitness_scores) / len(fitness_scores)
-    avg_fitness.append(gen_avg_fitness)
-
-    gen_variance = statistics.variance(fitness_scores)
-    variance_per_gen.append(gen_variance)
-    
 
     # --- Generations ---
     for gen in range(generations):
@@ -219,24 +218,27 @@ def run_ga_custom(
             )
             fitness_scores.append(score) 
         
-        idx = fitness_scores.index(max(fitness_scores))
-        gen_best = population[idx]
-        gen_best_score = fitness_scores[idx]
-
-        gens_best_fitness.append(gen_best_score)
+        gens_all_fitness.append(fitness_scores.copy())
+        gens_best_fitness.append(max(fitness_scores))
+        gens_worst_fitness.append(min(fitness_scores))
+        gens_avg_fitness.append(sum(fitness_scores) / len(fitness_scores))
+        gens_variance.append(statistics.variance(fitness_scores))
         
-        gen_avg_fitness = sum(fitness_scores) / len(fitness_scores)
-        avg_fitness.append(gen_avg_fitness)
-
-        gen_variance = statistics.variance(fitness_scores)
-        variance_per_gen.append(gen_variance)
-
+        gen_best_idx  = fitness_scores.index(max(fitness_scores))
+        gen_best_score = fitness_scores[gen_best_idx]
         if gen_best_score > best_score:
             best_score = gen_best_score
-            best_individual = gen_best
+            best_individual = population[gen_best_idx]
 
 
-    return best_individual, best_score, gens_best_fitness, avg_fitness, variance_per_gen
+    return (
+        best_individual, 
+        best_score, 
+        gens_best_fitness, 
+        gens_avg_fitness, 
+        gens_variance, 
+        gens_worst_fitness, 
+    )
 
 
 

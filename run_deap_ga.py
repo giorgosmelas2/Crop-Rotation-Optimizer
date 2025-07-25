@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
@@ -16,7 +17,7 @@ from demo_data import (
     random_dummy_past_crops,
     random_dummy_years,
 )
-from visualization.plots import all_plots  
+from visualization.plots import all_plots   
 
 def main():
     crops = dummy_crops()
@@ -31,7 +32,7 @@ def main():
     past_crops = random_dummy_past_crops()
     years = random_dummy_years()
 
-    best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness = optimize_rotation_plan(
+    best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness,= optimize_rotation_plan(
             crops=crops,
             pest_manager=pest_manager,
             field=field,
@@ -43,10 +44,10 @@ def main():
             crops_required_machinery=req_machinery,
             past_crops=past_crops,
             years=years,
-            algorithm="custom",
+            algorithm="deap",
         )
 
-    print(f"\n🌾 Best rotation: {best_individual}\n⭐ Best score: {best_score:.3f}\n")
+    print(f"\n🌾 Best individual (DEAP): {best_individual}\n⭐ Best score: {best_score:.3f}\n")
     all_plots(
         gens_best_fitness=gens_best_fitness,
         gens_avg_fitness=gens_avg_fitness,

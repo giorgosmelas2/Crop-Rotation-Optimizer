@@ -33,7 +33,7 @@ def evaluate_individual(
         years 
     ) -> tuple[float]:
 
-    individual_score, pest_tracking = simulate_crop_rotation(
+    individual_score = simulate_crop_rotation(
         field, 
         climate, 
         individual, 
@@ -46,8 +46,6 @@ def evaluate_individual(
         past_crops, 
         years
     )
-
-    individual.pest_tracking = pest_tracking
 
     return (individual_score,)  # tuple for DEAP compatibility
 
@@ -95,30 +93,39 @@ def run_ga_deap(
 
     toolbox.register("evaluate", wrapped_evaluate)
 
-    population = toolbox.population(n=POPULATION_SIZE)
+    pop = toolbox.population(n=POPULATION_SIZE)
     hof = tools.HallOfFame(1)
 
-    stats = tools.Statistics(lambda ind: ind.fitness.values)
-    stats.register("avg", lambda fits: sum(f[0] for f in fits) / len(fits))
-    stats.register("max", lambda fits: max(f[0] for f in fits))
-    stats.register("var", lambda fits: np.var([f[0] for f in fits]))
+    stats = tools.Statistics(key=lambda ind: ind.fitness.values[0])
+    stats.register("avg", np.mean)
+    stats.register("max", np.max)
+    stats.register("min", np.min)
+    stats.register("var", np.var)
 
-    population, logbook = algorithms.eaSimple(
-        population, 
+    pop, logbook = algorithms.eaSimple(
+        pop, 
         toolbox,
         cxpb=CROSSOVER_PROB,
         mutpb=MUTATION_RATE,
         ngen=GENERATIONS,
         stats=stats, 
         halloffame=hof, 
-        verbose=True
+        verbose=True,
     )
 
-    gen_best_fitness = [entry['max'] for entry in logbook]
-    avg_fitness = [entry['avg'] for entry in logbook]
-    variance_per_gen = [entry['var'] for entry in logbook]
+    best_fitness   = [entry["max"] for entry in logbook]
+    avg_fitness    = [entry["avg"] for entry in logbook]
+    worst_fitness  = [entry["min"] for entry in logbook]
+    variance       = [entry["var"] for entry in logbook]
 
     best = hof[0]
-    pest_tracking = getattr(best, "pest_tracking", None)
+    best_score = best.fitness.values[0]
 
-    return best, best.fitness.values[0], gen_best_fitness, avg_fitness, variance_per_gen, pest_tracking
+    return (
+        best,
+        best_score,
+        best_fitness,
+        avg_fitness,
+        worst_fitness,
+        variance,
+    )

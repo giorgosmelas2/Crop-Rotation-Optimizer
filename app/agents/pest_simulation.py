@@ -39,7 +39,7 @@ class PestSimulationManager:
                         col = c
                     )
                     cell.pests.append(new_pest)
-                    print(f"Initialized past pest {past_agent.name} at ({r}, {c})")
+                    # print(f"Initialized past pest {past_agent.name} at ({r}, {c})")
 
     def initialize_pest_agents(self, field: Field):
         """
@@ -75,7 +75,7 @@ class PestSimulationManager:
                     col = c
                 )
                 cell.pests.append(new_pest)
-                print(f"Initialized past pest {pest_agent.name} at ({r}, {c})")
+                # print(f"Initialized past pest {pest_agent.name} at ({r}, {c})")
  
     def step(self, field: Field):
         for row in range(field.grid.rows):
@@ -88,8 +88,8 @@ class PestSimulationManager:
                         if pest.is_alive():  # may have died from lifespan update
                             pest.spread(field)
                         else:
-                            print(f"Pest {pest.name} at ({row}, {col}) died after lifespan update.")
+                            # print(f"Pest {pest.name} at ({row}, {col}) died after lifespan update.")
                             cell.pests.remove(pest)
                     else:
-                        print(f"Pest {pest.name} at ({row}, {col}) has already died.")
+                        # print(f"Pest {pest.name} at ({row}, {col}) has already died.")
                         cell.pests.remove(pest)
