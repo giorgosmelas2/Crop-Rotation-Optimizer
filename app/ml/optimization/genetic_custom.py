@@ -129,11 +129,11 @@ def run_ga_custom(
         crops_required_machinery,
         past_crops,
         years,
-        population_size=50,
-        generations=30,
-        crossover_rate=0.7,
+        population_size=5,
+        generations=5,
+        crossover_rate=0.8,
         mutation_rate=0.2,
-        selection_method="rank"
+        selection_method="tournament"
     ):
 
     initial_field = field  

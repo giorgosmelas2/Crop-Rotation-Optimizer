@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from app.services.supabase_client import supabase
 
 from app.ml.core_models.field import Field
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
@@ -20,7 +21,7 @@ from app.services.beneficial_rotations_service import get_beneficial_rotations
 
 from app.ml.optimization.run_optimizer import optimize_rotation_plan
 
-from visualization.plots import fitness_evolution_plot, avg_fitness_evolution_plot, combined_fitness_plot, variance_plot, prepare_pest_frames, animate_pest_pressure, all_plots
+from visualization.plots import all_plots
 router = APIRouter()
 
 @router.post("/rotation-plan")
@@ -70,7 +71,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     rotation_years = rotation_info.years
 
-    best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness, gens_all_fitness = optimize_rotation_plan(
+    best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness = optimize_rotation_plan(
         crops=crops,
         pest_manager=pest_manager,
         field=field,
@@ -85,4 +86,21 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     )
 
     print(f"Best rotation: {best_individual}\nBest score: {best_score}\n")
-    all_plots(gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness=None,)
+    # all_plots(
+    #     gens_best_fitness=gens_best_fitness,
+    #     gens_avg_fitness=gens_avg_fitness,
+    #     gens_variance=gens_variance,
+    #     gens_worst_fitness=gens_worst_fitness,
+    # )
+
+    user_id = rotation_info.user_id
+
+    data = {
+        "user_id": user_id,
+        "years": rotation_info.years,
+        "crops": best_individual  
+    }
+
+    result = supabase.table("crop_plans").insert(data).execute()
+
+    print("Inserted to Supabase:", result)

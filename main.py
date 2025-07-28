@@ -20,11 +20,13 @@ from app.api.soil_categories import router as soils_router
 from app.api.rotation_plan import router as rotation_router
 from app.api.suggest_crops import router as climate_router
 from app.api.crop_machinery import router as machinery_router
+from app.api.crop_rotations import router as croo_rotations_router
 
 app.include_router(crops_router, prefix="/api")
 app.include_router(soils_router, prefix="/api")
 app.include_router(rotation_router, prefix="/api")
 app.include_router(climate_router, prefix="/api")
 app.include_router(machinery_router, prefix="/api")
+app.include_router(croo_rotations_router, prefix="/api")
 
 

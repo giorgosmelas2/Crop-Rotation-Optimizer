@@ -5,6 +5,7 @@ from app.models.coordinates import Coordinates
 from app.models.crop_pair import CropPair
 
 class RotationInfo(BaseModel): 
+    user_id: str
     crops: List[str]
     coordinates: Coordinates
     area: float
