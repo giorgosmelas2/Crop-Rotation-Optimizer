@@ -34,6 +34,7 @@ class Cell:
         self.current_crop = crop
         self.yield_ = yield_
         self.pests = pests or []
+        self.pest_names: set[str] = set()
         self.pest_pressure = pest_pressure
         self.crop_history = crop_history or []
 
@@ -64,9 +65,7 @@ class Cell:
         self.yield_ = 0.0
 
     def has_this_pest(self, pest_name: str) -> bool:
-        if pest_name in [pest.name for pest in self.pests]:
-            return True
-        return False
+        return pest_name in self.pest_names
     
     
 

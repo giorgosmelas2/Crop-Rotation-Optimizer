@@ -5,9 +5,6 @@ from app.ml.core_models.crop import Crop
 from app.ml.core_models.economics import Economics
 from app.ml.core_models.farmer_knowledge import FarmerKnowledge
 
-logger = logging.getLogger("crop_rotation")
-logger.setLevel(logging.DEBUG)
-
 WEIGHTS = {
     "temp": 0.20,       # θερμοκρασία
     "rain": 0.15,       # βροχόπτωση

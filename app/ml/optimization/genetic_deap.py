@@ -2,16 +2,17 @@ import random
 import numpy as np
 from functools import partial
 import multiprocessing
+from multiprocessing import Manager, Value
 
 from deap import base, creator, tools, algorithms
 from app.ml.core_models.crop import Crop
 from app.ml.simulation_logic.simulation import simulate_crop_rotation
 
-POPULATION_SIZE = 20
+POPULATION_SIZE = 200
+GENERATIONS = 30
 MUTATION_RATE = 0.4
 CROSSOVER_PROB = 0.8
-GENERATIONS = 20
-MAX_NO_IMPROVEMENT = 40
+MAX_NO_IMPROVEMENT = 50
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -21,6 +22,12 @@ toolbox = base.Toolbox()
 def init_individual(crop_ids, rotation_length):
     return random.choices(crop_ids, k=rotation_length)
 
+
+manager = Manager()
+evaluation_cache = manager.dict()
+
+hits = Value('i', 0)
+misses = Value('i', 0)
 def evaluate_individual(
         selected_crops,
         individual,  
@@ -33,8 +40,21 @@ def evaluate_individual(
         missing_machinery, 
         crops_required_machinery, 
         past_crops, 
-        years 
+        years,
+        evaluation_cache,
+        hits,
+        misses
     ) -> tuple[float]:
+
+    key = tuple(individual)  # Key for caching
+
+    if key in evaluation_cache:
+        with hits.get_lock():
+            hits.value += 1
+        return evaluation_cache[key]
+    else:
+        with misses.get_lock():
+            misses.value += 1
 
     individual_score = simulate_crop_rotation(
         selected_crops,
@@ -51,7 +71,11 @@ def evaluate_individual(
         years
     )
 
-    return (individual_score,)  # tuple for DEAP compatibility
+
+    result = (individual_score,)
+    evaluation_cache[key] = result
+    return result
+
 
 def mutate_individual(individual: list[int], crop_ids: list[int])  -> tuple[list[int]]:
     for i in range(len(individual)):
@@ -115,6 +139,9 @@ def run_ga_deap(
             crops_required_machinery, 
             past_crops, 
             years,
+            evaluation_cache,
+            hits,
+            misses
         )
 
     pool = multiprocessing.Pool()
@@ -207,6 +234,7 @@ def run_ga_deap(
     pool.close()
     pool.join()
 
+    print(f"Cache hits: {hits.value}, misses: {misses.value}")
     return (
         best_names,
         best_score,

@@ -26,7 +26,7 @@ class PestSimulationManager:
         chosen = sample(all_coords, min(cells_with_pests, total_cells))
 
         for (r, c) in chosen:
-            cell = field.grid.get_cell(r, c)
+            cell = field.grid.cell_grid[r][c]
             for past_agent in self.past_pest_agents:
                 if not cell.has_this_pest(past_agent.name):
                     new_pest = PestAgent(
@@ -39,7 +39,7 @@ class PestSimulationManager:
                         col = c
                     )
                     cell.pests.append(new_pest)
-                    # print(f"Initialized past pest {past_agent.name} at ({r}, {c})")
+                    cell.pest_names.add(new_pest.name)
 
     def initialize_pest_agents(self, field: Field):
         """
@@ -59,7 +59,7 @@ class PestSimulationManager:
         chosen = sample(all_coords, min(cells_with_pests, total_cells))
 
         for(r, c) in chosen:
-            cell = field.grid.get_cell(r, c)
+            cell = field.grid.cell_grid[r][c]
             pest_name = cell.current_crop.pest
             pest_agent = self.agents_by_name.get(pest_name)
             if pest_agent is None:
@@ -75,7 +75,7 @@ class PestSimulationManager:
                     col = c
                 )
                 cell.pests.append(new_pest)
-                # print(f"Initialized past pest {pest_agent.name} at ({r}, {c})")
+                cell.pest_names.add(new_pest.name)
  
     def step(self, field: Field):
         for row in range(field.grid.rows):
@@ -88,8 +88,8 @@ class PestSimulationManager:
                         if pest.is_alive():  # may have died from lifespan update
                             pest.spread(field)
                         else:
-                            # print(f"Pest {pest.name} at ({row}, {col}) died after lifespan update.")
                             cell.pests.remove(pest)
+                            cell.pest_names.discard(pest.name)
                     else:
-                        # print(f"Pest {pest.name} at ({row}, {col}) has already died.")
                         cell.pests.remove(pest)
+                        cell.pest_names.discard(pest.name)

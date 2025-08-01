@@ -13,15 +13,6 @@ from app.ml.evaluation.farmer_knowledge_evaluator import farmer_knowledge_evalua
 from app.ml.evaluation.machinery_evaluator import machinery_evaluation
 from app.ml.evaluation.profit_evaluator import profit_evaluation
 
-# logger = logging.getLogger("crop_rotation")
-# logger.setLevel(logging.DEBUG)
-
-# if not logger.hasHandlers():
-#     handler = logging.StreamHandler()
-#     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-#     handler.setFormatter(formatter)
-#     logger.addHandler(handler)
-
 BASE_ROTATION_WEIGHTS = {
 "profit": 0.4,
 "farmer_knowledge": 0.19,

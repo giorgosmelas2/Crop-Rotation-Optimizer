@@ -8,6 +8,9 @@ if TYPE_CHECKING:
 
 import random
 
+SPRAYING_EFFECT_PRESSURE = { 0: 0.0, 1: 0.3, 2: 0.7, 3: 0.95 }
+SPRAYING_EFFECT_LIFESPAN = { 0: 0.0, 1: 0.2, 2: 0.5, 3: 0.7 }
+
 class PestAgent: 
     def __init__(
             self,
@@ -73,18 +76,13 @@ class PestAgent:
                                 col=n_col,
                             )
                             neighbor_cell.pests.append(new_pest)
+                            neighbor_cell.pest_names.add(new_pest.name)
                     
 
     def apply_effect(self, cell: Cell):
         """
         Apply the pest agent's effect on the field
         """
-        spraying_effect = {
-            0: 0.0,
-            1: 0.3,
-            2: 0.7,
-            3: 0.95 
-        } 
         spraying_level = cell.spraying
    
         current_crop = cell.current_crop
@@ -100,28 +98,23 @@ class PestAgent:
         elif current_crop.order in self.affected_orders:
             rate = self.spread_rate_same_order
         else:
-            decay = self.decay_rate * (1 + spraying_effect[spraying_level])
+            decay = self.decay_rate * (1 + SPRAYING_EFFECT_PRESSURE[spraying_level])
             cell.pest_pressure = max(cell.pest_pressure - decay, 0.0)
             return
 
         # Decrease of the spread rate based on spraying level
-        reduction = spraying_effect[spraying_level] * rate
+        reduction = SPRAYING_EFFECT_PRESSURE[spraying_level] * rate
         cell.pest_pressure += rate - reduction
         cell.pest_pressure = min(cell.pest_pressure, 1.0)
                         
     def update_lifespan(self, cell: Cell):
-        spraying_effect = {
-            0: 0.0,
-            1: 0.2,
-            2: 0.5,
-            3: 0.7 
-        } 
+
         spraying_level = cell.spraying
         current_crop = cell.current_crop 
         past_crop = cell.crop_history[-1] if len(cell.crop_history) >= 1 else None
         pre_past_crop = cell.crop_history[-2] if len(cell.crop_history) >= 2 else None
 
-        spraying_decrease = spraying_effect[spraying_level] * self.lifespan_decrease
+        spraying_decrease = SPRAYING_EFFECT_LIFESPAN[spraying_level] * self.lifespan_decrease
         self.lifespan -= spraying_decrease
 
         if self.is_alive():
@@ -152,8 +145,6 @@ class PestAgent:
                     self.lifespan += self.lifespan_increase * 0.1
                 elif pre_past_crop.order in self.affected_orders:
                     self.lifespan += self.lifespan_increase * 0.05
-        # else:
-            # print(f"{self.name} has died in cell ({self.row}, {self.col})")
         
         self.lifespan = max(0.0, min(self.lifespan, 1.0))
         
