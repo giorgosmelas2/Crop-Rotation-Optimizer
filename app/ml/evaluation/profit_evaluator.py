@@ -37,10 +37,14 @@ def profit_evaluation(
     # Stress factors
     temp_factor = crop.get_temperature_stress(climate)
     rain_factor = crop.get_rain_stress(climate)
+
+    # Beneficial rotations boost
+    reference_history = field.grid.cell_grid[0][0].crop_history
+    past_crops = [c.name for c in reference_history]
+    benefial_rotation_multiplier = benefial_rotations_multiplier(beneficial_rotations, crop.name, past_crops)
     
-    for row in range(field.grid.rows):
-        for col in range(len(field.grid.cell_grid[row])):
-            cell = field.grid.get_cell(row, col)
+    for row in field.grid.cell_grid:
+        for cell in row:
             cell_yield = 0.0
 
             moisture_factor = crop.get_moisture_stress(cell)
@@ -55,14 +59,6 @@ def profit_evaluation(
             )
             soil_factor = soil_type_penalty(crop.soil_type, cell.soil_type)
             ph_factor = ph_penalty(crop.ph_min, crop.ph_max, cell.ph)
-
-            logger.debug(f"temp_factor = {temp_factor}")
-            logger.debug(f"rain_factor = {rain_factor}")
-            logger.debug(f"moisture_factor = {moisture_factor}")
-            logger.debug(f"pest_factor = {pest_factor}")
-            logger.debug(f"nutrient_factor = {nutrient_factor}")
-            logger.debug(f"ph_factor = {ph_factor}")
-            logger.debug(f"soil_factor = {soil_factor}")
 
             yield_penalty = (
                 WEIGHTS["temp"] * temp_factor +
@@ -86,9 +82,6 @@ def profit_evaluation(
 
             cell_yield *= knowledge_multiplier
 
-            # Beneficial rotations boost
-            past_crops = [crop.name for crop in cell.crop_history]
-            benefial_rotation_multiplier = benefial_rotations_multiplier(beneficial_rotations, crop.name, past_crops)
 
             cell_yield *= benefial_rotation_multiplier
 

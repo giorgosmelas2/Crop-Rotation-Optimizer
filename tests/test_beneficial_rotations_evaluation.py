@@ -5,11 +5,11 @@ import app.ml.evaluation.beneficial_rotations_evaluator as eval_mod
 
 @pytest.fixture
 def crop_A():
-    return make_dummy_crop(name="A")
+    return "A"
 
 @pytest.fixture
 def crop_B():
-    return make_dummy_crop(name="B")
+    return "B"
 
 
 # Test 1: exact match without past_crops

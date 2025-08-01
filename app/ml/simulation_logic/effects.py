@@ -43,16 +43,13 @@ def update_soil_after_crop(crop: Crop, cell: Cell):
     cell.k = max(0.0, total_k)
 
 
-def update_soil_moisture_after_crop(crop: Crop, cell: Cell, climate: Climate):
+def update_soil_moisture_after_crop(sow: int, harvest: int, cell: Cell, climate: Climate):
     """
     Updates soil moisture for a cell based in:
     - rain (mm),
     - evapotranspiration (mm)
     - relative humidity (%)
     """
-    sow = crop.sow_month
-    harvest = crop.harvest_month
-
     monthly_rain = climate.get_rain(sow, harvest)
     monthly_evap = climate.get_evap(sow, harvest)
     monthly_rh = climate.get_rh(sow, harvest)

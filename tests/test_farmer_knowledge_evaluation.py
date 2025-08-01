@@ -9,10 +9,9 @@ def test_farmer_knowledge_with_one_effective_pair():
     fk = FarmerKnowledge(
         effective_pairs=[CropPair(crop1="Καλαμπόκι", crop2="Ηλίανθος", value=3)],
         uneffective_pairs=[],
+        past_crops=[]
     )
-    crops = [
-        make_dummy_crop(name="Ηλίανθος")
-    ]
+    crops = ["Ηλίανθος"]
     past_crops = ["Καλαμπόκι"]
         
     score = farmer_knowledge_evaluation(fk, crops, past_crops)
@@ -23,10 +22,9 @@ def test_farmer_knowledge_with_one_uneffective_pair():
     fk = FarmerKnowledge(
         effective_pairs=[],
         uneffective_pairs=[CropPair(crop1="Καλαμπόκι", crop2="Ηλίανθος", value=3)],
+        past_crops=[]
     )
-    crops = [
-        make_dummy_crop(name="Ηλίανθος")
-    ]
+    crops = ["Ηλίανθος"]
     past_crops = ["Καλαμπόκι"]
         
     score = farmer_knowledge_evaluation(fk, crops, past_crops)
@@ -37,11 +35,9 @@ def test_farmer_knowledge_with_unknown_pair():
     fk = FarmerKnowledge(
         effective_pairs=[],
         uneffective_pairs=[],
+        past_crops=[]
     )
-    crops = [
-        make_dummy_crop(name="Ηλίανθος"),
-        make_dummy_crop(name="Καλαμπόκι")
-    ]
+    crops = ["Ηλίανθος", "Καλαμπόκι"]
     past_crops = ["Καλαμπόκι"]
     score = farmer_knowledge_evaluation(fk, crops, past_crops)
     assert score == 0.0
@@ -51,11 +47,9 @@ def test_farmer_knowledge_pair_reverse_order():
     fk = FarmerKnowledge(
         effective_pairs=[CropPair(crop1="Φακές", crop2="Βρώμη", value=3)],
         uneffective_pairs=[],
+        past_crops=[]
     )
-    crops = [
-        make_dummy_crop(name="Βρώμη"),
-        make_dummy_crop(name="Φακές")
-    ]
+    crops = ["Βρώμη", "Φακές"]
     past_crops = []
     score = farmer_knowledge_evaluation(fk, crops, past_crops)
     assert score == 0.0

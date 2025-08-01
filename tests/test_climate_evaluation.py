@@ -48,8 +48,8 @@ def test_climate_frost_stress(dummy_crop):
 def test_climate_heatwave_stress(dummy_crop):
     # Too low temperatures
     climate = Climate(
-        monthly_tmin=[dummy_crop.t_max + 10] * 12,
-        monthly_tmax=[dummy_crop.t_max + 5] * 12,
+        monthly_tmin=[dummy_crop.t_max + 5] * 12,
+        monthly_tmax=[dummy_crop.t_max + 10] * 12,
         monthly_rain=[50] * 12,
         monthly_evap=[30.0] * 12,
         monthly_rh=[0.5] * 12

@@ -9,10 +9,6 @@ def climate_evaluation(climate: Climate, crop: Crop) -> float:
     temp_stress = crop.get_temperature_stress(climate)
     rain_stress = crop.get_rain_stress(climate)
 
-    # Test
-    print(f"Temperature stress: {temp_stress}")
-    print(f"Rain stress: {rain_stress}")
-
     # Combined stress
     total_stress = (0.6 * temp_stress) + (0.4 * rain_stress)
 

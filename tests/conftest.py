@@ -164,6 +164,7 @@ def dummy_cell():
 
 def make_dummy_rotation_info(**overides) -> RotationInfo:
     defaults = {
+        "user_id":" ",
         "crops":["Σιτάρι", "Λούπινο"],
         "coordinates":Coordinates(lat=39.0, lng=22.0),
         "area":36.0,
@@ -190,6 +191,7 @@ def make_dummy_rotation_info(**overides) -> RotationInfo:
 @pytest.fixture
 def dummy_rotation_info():
     return RotationInfo(
+        user_id="",
         crops=["Σιτάρι", "Λούπινο"],
         coordinates=Coordinates(lat=39.0, lng=22.0),
         area=12.0,
@@ -626,6 +628,7 @@ def random_dummy_field(random_dummy_rotation_info):
 
 def random_dummy_rotation_info():
     return RotationInfo(
+        user_id="",
         crops=["Σιτάρι", "Λούπινο"],
         coordinates=Coordinates(lat=39.0, lng=22.0),
         area=12.0,

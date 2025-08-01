@@ -53,25 +53,10 @@ def worst_fitness_evolution_plot(gens_worst_fitness):
     plt.ylabel('Worst Fitness Score')
     plt.grid(True)
     plt.tight_layout()
-
-def improvement_rate_plot(gens_best_fitness):
-    improvements = [
-        gens_best_fitness[i] - gens_best_fitness[i-1]
-        for i in range(1, len(gens_best_fitness))
-    ]
-    plt.figure(figsize=(10,6))
-    plt.plot(range(1, len(gens_best_fitness)), improvements, marker='o', linestyle='-')
-    plt.axhline(0, linestyle='--')
-    plt.title('Improvement Rate of Best Fitness')
-    plt.xlabel('Generation')
-    plt.ylabel('Δ Best Fitness')
-    plt.grid(True)
-    plt.tight_layout()
   
 
 def all_plots(gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness):
     combined_fitness_plot(gens_best_fitness, gens_avg_fitness, gens_worst_fitness)
     variance_plot(gens_variance)
-    improvement_rate_plot(gens_best_fitness)
 
     plt.show()

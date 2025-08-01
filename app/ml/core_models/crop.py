@@ -181,9 +181,9 @@ class Crop:
             total += stress
 
         if harvest > sow:
-            months = harvest - sow
+            months = harvest - sow + 1
         else:
-            months = 12 - sow + harvest 
+            months = (12 - sow + 1) + harvest 
         return min(total / months, 1.0) # Normalize and cap stress at 1.0
 
     def get_rain_stress(self, climate: Climate) -> float:

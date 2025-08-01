@@ -1,5 +1,5 @@
 def optimize_rotation_plan(
-    crops,
+    selected_crops,
     pest_manager,
     field,
     climate,
@@ -15,7 +15,7 @@ def optimize_rotation_plan(
     if algorithm == "deap":
         from app.ml.optimization.genetic_deap import run_ga_deap
         best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness = run_ga_deap(
-            crops, 
+            selected_crops, 
             pest_manager,
             field, 
             climate,
@@ -30,7 +30,7 @@ def optimize_rotation_plan(
     elif algorithm == "custom":
         from app.ml.optimization.genetic_custom import run_ga_custom
         best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness = run_ga_custom(
-            crops, 
+            selected_crops, 
             pest_manager,
             field, 
             climate,
@@ -46,7 +46,7 @@ def optimize_rotation_plan(
         raise ValueError("Unsupported algorithm type. Use 'deap' or 'custom'.")
 
     return (
-        [crop.name for crop in best_individual], 
+        best_individual, 
         best_score, 
         gens_best_fitness, 
         gens_avg_fitness, 

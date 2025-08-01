@@ -28,14 +28,14 @@ router = APIRouter()
 async def create_rotation_plan(rotation_info: RotationInfo):
 
     # Fetching crops' informations
-    crops = fetch_crop_info(rotation_info.crops)
+    selected_crops = fetch_crop_info(rotation_info.crops)
     past_crops = fetch_crop_info(rotation_info.past_crops)
 
     past_crops_names = [crop.name for crop in past_crops]
     past_pest_agents = create_pest_agent(past_crops_names)
 
     # Creating the pest agents of crops
-    crop_names = [crop.name for crop in crops]
+    crop_names = [crop.name for crop in selected_crops]
     pest_agents = create_pest_agent(crop_names)
     pest_manager = PestSimulationManager(pest_agents, past_pest_agents)
 
@@ -62,9 +62,9 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     climate = get_climate_data(coords)
 
     # Fetching economic data for each crop
-    economic_data = get_economic_data(crops)
+    economic_data = get_economic_data(selected_crops)
 
-    crops_required_machinery = get_required_machinery(crops)
+    crops_required_machinery = get_required_machinery(selected_crops)
     beneficial_rotations = get_beneficial_rotations()
 
     missing_machinery = rotation_info.machinery
@@ -72,7 +72,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
     rotation_years = rotation_info.years
 
     best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness = optimize_rotation_plan(
-        crops=crops,
+        selected_crops=selected_crops,
         pest_manager=pest_manager,
         field=field,
         climate=climate,

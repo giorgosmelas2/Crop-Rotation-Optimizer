@@ -6,8 +6,6 @@ from app.ml.core_models.climate import Climate
 from app.ml.core_models.economics import Economics
 from app.agents.pest_simulation import PestSimulationManager
 
-from app.ml.simulation_logic.effects import update_soil_after_crop, update_soil_moisture_after_crop
-
 from app.ml.evaluation.beneficial_rotations_evaluator import beneficial_rotations_evaluation
 from app.ml.evaluation.climate_evaluator import climate_evaluation
 from app.ml.evaluation.crop_rotation_evaluator import crop_rotation_evaluation
@@ -15,19 +13,29 @@ from app.ml.evaluation.farmer_knowledge_evaluator import farmer_knowledge_evalua
 from app.ml.evaluation.machinery_evaluator import machinery_evaluation
 from app.ml.evaluation.profit_evaluator import profit_evaluation
 
-logger = logging.getLogger("crop_rotation")
-logger.setLevel(logging.DEBUG)
+# logger = logging.getLogger("crop_rotation")
+# logger.setLevel(logging.DEBUG)
 
-if not logger.hasHandlers():
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+# if not logger.hasHandlers():
+#     handler = logging.StreamHandler()
+#     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+#     handler.setFormatter(formatter)
+#     logger.addHandler(handler)
+
+BASE_ROTATION_WEIGHTS = {
+"profit": 0.4,
+"farmer_knowledge": 0.19,
+"beneficial_rotations": 0.12,
+"climate": 0.11,
+"crop_rotation": 0.1,
+"machinery": 0.08,
+}
 
 def simulate_crop_rotation( 
+        selected_crops: list[Crop],
         field: Field, 
         climate: Climate, 
-        crops: list[Crop], 
+        crops_ids: list[int], 
         pest_manager: PestSimulationManager,
         farmer_knowledge: FarmerKnowledge,
         beneficial_rotations: list[list[str]],
@@ -36,7 +44,7 @@ def simulate_crop_rotation(
         crops_required_machinery: dict[int, list[str]],
         past_crops: list[str],
         years: int
-    ) -> tuple[float, dict]:
+    ) -> float:
 
     """
     Simulates a multi-year crop rotation and evaluates its overall performance.
@@ -62,14 +70,17 @@ def simulate_crop_rotation(
     Returns:
         total_score (float): Final normalized score of the rotation (0.0-1.0).
     """
+    id_to_crop = {crop.id: crop for crop in selected_crops}
+    crops =  get_crops_from_ids(crops_ids, id_to_crop)
 
     total_score = 0.0
 
     total_crops = len(crops)
     current_crop_index = 0
 
-    farmer_knowledge_score = farmer_knowledge_evaluation(farmer_knowledge, crops, past_crops)
-    beneficial_rotations_score = beneficial_rotations_evaluation(crops, past_crops)
+    crop_names = [crop.name for crop in crops]
+    farmer_knowledge_score = farmer_knowledge_evaluation(farmer_knowledge, crop_names.copy(), past_crops)
+    beneficial_rotations_score = beneficial_rotations_evaluation(crop_names.copy(), past_crops, beneficial_rotations)
     crop_rotation_score = crop_rotation_evaluation(crops)
     
     total_profit_score = 0.0
@@ -78,15 +89,19 @@ def simulate_crop_rotation(
 
     num_evaluated_crops = 0
 
-    pest_manager.initialize_past_pest_agents(field)
+    if past_crops:
+        pest_manager.initialize_past_pest_agents(field)
+
+    climate_score_cache: dict[int, float] = {}
+    machinery_score_cache: dict[int, float] = {}
 
     # Years + 1 if the last crop harvest month is in the next year
     for year in range(years + 1):
-        logger.info(f"---Year {year + 1}---")  
+
         # Stop simulation if all crops have been processed
         if current_crop_index >= total_crops:
-            logger.info("All crops have been sown and harvested. Stopping early.")
             break
+
         for month in range(1,13):
             # Current crop
             crop = crops[current_crop_index]
@@ -95,74 +110,83 @@ def simulate_crop_rotation(
             if month == crop.sow_month and field.grid.is_field_empty():
                 num_evaluated_crops += 1
 
-                logger.info(f"Month {month}: sowing {crop.name} in all cells.")
-                for row in range(field.grid.rows):
-                    for col in range(len(field.grid.cell_grid[row])):
-                        field.grid.sow_crop(row, col, crop)
+                # Sowing the crop in all cells
+                field.grid.sow_crop_to_all(crop)
 
                 # Initialize pest for current crop
                 pest_manager.initialize_pest_agents(field)
 
                 # Evaluate climate suitability for the crop
-                climate_score = climate_evaluation(climate, crop)
+                if crop.id in climate_score_cache:
+                    climate_score = climate_score_cache[crop.id]
+                else:
+                    climate_score = climate_evaluation(climate, crop)
+                    climate_score_cache[crop.id] = climate_score
                 total_climate_score += climate_score
-                logger.debug(f"Climate score for {crop.name}: {climate_score:.2f}")
                     
                 # Missing machinery evaluation
-                machinery_score = machinery_evaluation(crops_required_machinery[crop.id], missing_machinery)
+                if crop.id in machinery_score_cache:
+                    machinery_score = machinery_score_cache[crop.id]
+                else:
+                    machinery_score = machinery_evaluation(crops_required_machinery[crop.id], missing_machinery)
+                    machinery_score_cache[crop.id] = machinery_score
                 total_machinery_score += machinery_score
-                logger.debug(f"Machinery score for {crop.name}: {machinery_score}")
+
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
             elif month == crop.harvest_month and not field.grid.is_field_empty():
                 # Evaluate total profit
                 profit_score = profit_evaluation(crop, field, economic_data.get(crop.id), climate, farmer_knowledge, beneficial_rotations)
                 total_profit_score += profit_score
-                logger.debug(f"Yield score for {crop.name}: {profit_score:.2f}")
 
-                logger.info(f"Month {month}: harvesting {crop.name} in all cells.")
-                for row in range(field.grid.rows):
-                    for col in range(len(field.grid.cell_grid[row])):
-                        cell = field.grid.get_cell(row, col)
-                        update_soil_moisture_after_crop(crop, cell, climate)
-                        update_soil_after_crop(crop, cell) 
-                        field.grid.harvest_crop(row, col)
+                # Harvesting the crop in all cells
+                field.grid.harvest_all(crop, climate)
 
                 current_crop_index += 1
                 # If all crops have been processed, stop the simulation
                 if current_crop_index >= total_crops : 
-                    logger.info("All crops have been sown and harvested.")
                     break
             
             pest_manager.step(field)
 
+    if num_evaluated_crops == 0:
+        return 0.0
+
     final_profit_score = total_profit_score / num_evaluated_crops
     final_climate_score = total_climate_score / num_evaluated_crops
     final_machinery_score = total_machinery_score / num_evaluated_crops
+    
+    score_components = {
+        "profit": final_profit_score,
+        "farmer_knowledge": farmer_knowledge_score,
+        "beneficial_rotations": beneficial_rotations_score,
+        "climate": final_climate_score,
+        "crop_rotation": crop_rotation_score,
+        "machinery": final_machinery_score,
+    }   
+    # If thre is no farmer knowledge the wheight has to be 0 and other weights will be adjuste
+    has_farmer_knowledge = bool(farmer_knowledge.effective_pairs or farmer_knowledge.uneffective_pairs)
+    weights = BASE_ROTATION_WEIGHTS.copy()
+    if not has_farmer_knowledge:
+        weights["farmer_knowledge"] = 0.0
 
-    logger.info("-----------------------------------------------------")
-    logger.debug(f"final_profit_score: {final_profit_score}")
-    logger.debug(f"final_climate_score: {final_climate_score}")
-    logger.debug(f"final_machinery_score: {final_machinery_score}")
-    logger.debug(f"farmer_knowledge_score: {farmer_knowledge_score}")
-    logger.debug(f"beneficial_rotations_score: {beneficial_rotations_score}")
-    logger.debug(f"crop_rotation_score: {crop_rotation_score}")
-    logger.info("-----------------------------------------------------")
+    total_active_weight = sum(weights.values())
+    if total_active_weight == 0:
+        total_score = 0.0
+    else:
+        normalized_weights = {k: w / total_active_weight for k, w in weights.items()}
+        total_score = sum(score_components[k] * normalized_weights[k] for k in score_components)
 
-    total_score = (
-        0.4 * final_profit_score +
-        0.19 * farmer_knowledge_score + 
-        0.12 * beneficial_rotations_score + 
-        0.11 * final_climate_score +
-        0.1 * crop_rotation_score + 
-        0.08 * final_machinery_score
-    )
-
-    logger.debug(f"Total score: {total_score}")
     return total_score
    
     
-    
-    
-       
+# Helper function that returns the Crop objectives from ids
+def get_crops_from_ids(crop_ids: list[int], id_to_crop: dict[int, Crop]) -> list[Crop]:
+    crops = []
+    for cid in crop_ids:
+        crop = id_to_crop.get(cid)
+        if crop is None:
+            raise ValueError(f"Crop id {cid} not found among selected_crops")
+        crops.append(crop)
+    return crops
 
 
