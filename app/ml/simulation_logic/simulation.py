@@ -86,6 +86,8 @@ def simulate_crop_rotation(
     climate_score_cache: dict[int, float] = {}
     machinery_score_cache: dict[int, float] = {}
 
+    simulation_step_counter = 0
+
     # Years + 1 if the last crop harvest month is in the next year
     for year in range(years + 1):
 
@@ -93,12 +95,15 @@ def simulate_crop_rotation(
         if current_crop_index >= total_crops:
             break
 
+        sow_month = crops[current_crop_index].sow_month
+        harvest_month = crops[current_crop_index].harvest_month
+
         for month in range(1,13):
             # Current crop
             crop = crops[current_crop_index]
 
             # Sowing: If it's the sowing month and the field is empty, sow the crop in all cells
-            if month == crop.sow_month and field.grid.is_field_empty():
+            if month == sow_month and field.grid.is_field_empty():
                 num_evaluated_crops += 1
 
                 # Sowing the crop in all cells
@@ -124,7 +129,7 @@ def simulate_crop_rotation(
                 total_machinery_score += machinery_score
 
             # Harvesting: If it's the harvest month and the field is not empty, harvest the crop in all cells
-            elif month == crop.harvest_month and not field.grid.is_field_empty():
+            elif month == harvest_month and not field.grid.is_field_empty():
                 # Evaluate total profit
                 profit_score = profit_evaluation(crop, field, economic_data.get(crop.id), climate, farmer_knowledge, beneficial_rotations)
                 total_profit_score += profit_score
@@ -136,8 +141,10 @@ def simulate_crop_rotation(
                 # If all crops have been processed, stop the simulation
                 if current_crop_index >= total_crops : 
                     break
-            
-            pest_manager.step(field)
+
+            if simulation_step_counter % 2 == 0:
+                pest_manager.step(field)
+            simulation_step_counter += 1
 
     if num_evaluated_crops == 0:
         return 0.0

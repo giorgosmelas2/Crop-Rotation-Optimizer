@@ -72,8 +72,6 @@ def fetch_crop_info(crop_names: list[str]) -> list[Crop]:
                     rain_max_mm = crop_climate[0]["rain_max"],
                     ph_min = crop_climate[0]["ph_min"],
                     ph_max = crop_climate[0]["ph_max"],
-                    g_min = crop_climate[0]["g_min"],
-                    g_max = crop_climate[0]["g_max"],
                     n = crop_nutrients[0]["n"],
                     p = crop_nutrients[0]["p"],
                     k = crop_nutrients[0]["k"],

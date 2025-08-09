@@ -53,10 +53,20 @@ def worst_fitness_evolution_plot(gens_worst_fitness):
     plt.ylabel('Worst Fitness Score')
     plt.grid(True)
     plt.tight_layout()
+
+def std_plot(gens_variance):
+    plt.figure(figsize=(10,6))
+    plt.plot(gens_variance, marker='o', linestyle='-', color='purple')
+    plt.title('Fitness Standard Deviation per Generation')
+    plt.xlabel('Generation')
+    plt.ylabel('Standard Deviation')
+    plt.grid(True)
+    plt.tight_layout()
   
 
 def all_plots(gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness):
     combined_fitness_plot(gens_best_fitness, gens_avg_fitness, gens_worst_fitness)
     variance_plot(gens_variance)
+    std_plot(gens_variance)
 
     plt.show()

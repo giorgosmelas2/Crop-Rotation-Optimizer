@@ -21,8 +21,6 @@ class Crop:
             rain_max_mm: int,
             ph_min: float,
             ph_max: float,
-            g_min: int,
-            g_max: int,
             n: float, 
             p: float,
             k: float,
@@ -52,8 +50,6 @@ class Crop:
         self.rain_max_mm = rain_max_mm
         self.ph_min = ph_min
         self.ph_max = ph_max
-        self.g_min = g_min
-        self.g_max = g_max
         self.n = n
         self.p = p
         self.k = k
@@ -85,8 +81,6 @@ class Crop:
             f"rain_max_mm: {self.rain_max_mm}",
             f"ph_min: {self.ph_min}",
             f"ph_max: {self.ph_max}",
-            f"g_min: {self.g_min}",
-            f"g_max: {self.g_max}",
             f"n: {self.n}",
             f"p: {self.p}",
             f"k: {self.k}",
@@ -118,8 +112,6 @@ class Crop:
             f"rain_max_mm: {self.rain_max_mm}",
             f"ph_min: {self.ph_min}",
             f"ph_max: {self.ph_max}",
-            f"g_min: {self.g_min}",
-            f"g_max: {self.g_max}",
             f"n: {self.n}",
             f"p: {self.p}",
             f"k: {self.k}",
@@ -147,35 +139,41 @@ class Crop:
 
         total = 0.0 # Sum of stress values across months
 
+        # To decrease the run time of GA
+        t_min = self.t_min
+        t_max = self.t_max
+        t_opt_min = self.t_opt_min
+        t_opt_max = self.t_opt_max
+
         for tmin, tmax in zip(tmins, tmaxs):
             # Case 1: Extreme cold or heat beyond survivable limit
-            if tmin < self.t_min - 5 or tmax > self.t_max + 5:
+            if tmin < t_min - 5 or tmax > t_max + 5:
                 return 1.0
             # Case 2: Ideal temperature range (no stress)
-            elif self.t_opt_min <= tmin <= self.t_opt_max and \
-                self.t_opt_min <= tmax <= self.t_opt_max:
+            elif t_opt_min <= tmin <= t_opt_max and \
+                t_opt_min <= tmax <= t_opt_max:
                 continue
             # Case 3: Within tolerable range but outside optimal
-            elif self.t_min <= tmin <= self.t_max and self.t_min <= tmax <= self.t_max:
+            elif t_min <= tmin <= t_max and t_min <= tmax <= t_max:
                 # Calculate deviation from optimal temperatures
-                dev_min = max(self.t_opt_min - tmin, tmin - self.t_opt_max, 0)
-                dev_max = max(self.t_opt_min - tmax, tmax - self.t_opt_max, 0)
-                stress = (dev_min + dev_max) / (2 * (self.t_opt_max - self.t_opt_min))
+                dev_min = max(t_opt_min - tmin, tmin - t_opt_max, 0)
+                dev_max = max(t_opt_min - tmax, tmax - t_opt_max, 0)
+                stress = (dev_min + dev_max) / (2 * (t_opt_max - t_opt_min))
 
                 # Apply penalty curve based on how far it is from optimal
                 if (
-                    self.t_min <= tmin <= self.t_opt_min and self.t_min <= tmax <= self.t_opt_min
+                    t_min <= tmin <= t_opt_min and t_min <= tmax <= t_opt_min
                 ) or (
-                    self.t_opt_max <= tmin <= self.t_max and self.t_opt_max <= tmax <= self.t_max
+                    t_opt_max <= tmin <= t_max and t_opt_max <= tmax <= t_max
                 ):
                     stress **= 1.3
                 else:
                     stress **= 1.1   
             # Case 4: Outside tolerable range but not catastrophic
             else:
-                dev_min = max(self.t_min - tmin, tmin - self.t_max, 0)
-                dev_max = max(self.t_min - tmax, tmax - self.t_max, 0)
-                normalized  = (dev_min + dev_max) / (2 * (self.t_max - self.t_min))
+                dev_min = max(t_min - tmin, tmin - t_max, 0)
+                dev_max = max(t_min - tmax, tmax - t_max, 0)
+                normalized  = (dev_min + dev_max) / (2 * (t_max - t_min))
                 stress = normalized ** 1.5
               
             total += stress
@@ -198,22 +196,26 @@ class Crop:
         sow = self.sow_month
         harvest = self.harvest_month
 
+        # To decrease the run time of GA
+        rain_min_mm = self.rain_min_mm
+        rain_max_mm = self.rain_max_mm
+
         # Calculate total rainfall during the growing season
         total_rain = sum(climate.get_rain(sow, harvest))
 
         # If rainfall is within acceptable range → no stress
-        if self.rain_min_mm <= total_rain <= self.rain_max_mm:
+        if rain_min_mm <= total_rain <= rain_max_mm:
             return 0.0
 
         # If rainfall is below the minimum requirement    
-        if total_rain < self.rain_min_mm:
-            diff = self.rain_min_mm - total_rain
-            range_ = self.rain_max_mm - self.rain_min_mm or 1  
+        if total_rain < rain_min_mm:
+            diff = rain_min_mm - total_rain
+            range_ = rain_max_mm - rain_min_mm or 1  
             stress = diff / range_    
         # If rainfall exceeds the maximum tolerable value
         else:
-            diff = total_rain - self.rain_max_mm
-            range_ = self.rain_max_mm - self.rain_min_mm or 1
+            diff = total_rain - rain_max_mm
+            range_ = rain_max_mm - rain_min_mm or 1
             stress = diff / range_
 
         # Cap the stress to a maximum of 1.0

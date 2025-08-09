@@ -78,18 +78,16 @@ class PestSimulationManager:
                 cell.pest_names.add(new_pest.name)
  
     def step(self, field: Field):
-        for row in range(field.grid.rows):
-            for col in range(len(field.grid.cell_grid[row])):
-                cell = field.grid.get_cell(row, col)
-                for pest in cell.pests[:]:  # copy for safe removal
-                    if pest.is_alive():
-                        pest.apply_effect(cell)
-                        pest.update_lifespan(cell)
-                        if pest.is_alive():  # may have died from lifespan update
-                            pest.spread(field)
-                        else:
-                            cell.pests.remove(pest)
-                            cell.pest_names.discard(pest.name)
+        for cell in field.grid.get_all_cells():
+            for pest in cell.pests[:]:  # copy for safe removal
+                if pest.is_alive():
+                    pest.apply_effect(cell)
+                    pest.update_lifespan(cell)
+                    if pest.is_alive():  # may have died from lifespan update
+                        pest.spread(field)
                     else:
                         cell.pests.remove(pest)
                         cell.pest_names.discard(pest.name)
+                else:
+                    cell.pests.remove(pest)
+                    cell.pest_names.discard(pest.name)

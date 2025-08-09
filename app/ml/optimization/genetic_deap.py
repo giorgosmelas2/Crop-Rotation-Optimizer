@@ -1,18 +1,23 @@
 import random
+import hashlib
 import numpy as np
 from functools import partial
 import multiprocessing
 from multiprocessing import Manager, Value
 
-from deap import base, creator, tools, algorithms
+from deap import base, creator, tools
 from app.ml.core_models.crop import Crop
 from app.ml.simulation_logic.simulation import simulate_crop_rotation
 
-POPULATION_SIZE = 200
-GENERATIONS = 30
-MUTATION_RATE = 0.4
+POPULATION_SIZE = 128
+GENERATIONS = 500
+MUTATION_RATE = 0.35
 CROSSOVER_PROB = 0.8
-MAX_NO_IMPROVEMENT = 50
+MAX_NO_IMPROVEMENT = 70
+# ELITE_SIZE = 10
+STD_THRESHOLD = 0.01
+PATIENCE_STD = 100
+USE_SHARED_CACHE = False
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 creator.create("Individual", list, fitness=creator.FitnessMax)
@@ -22,12 +27,17 @@ toolbox = base.Toolbox()
 def init_individual(crop_ids, rotation_length):
     return random.choices(crop_ids, k=rotation_length)
 
+# --- Cache init ---
+if USE_SHARED_CACHE:
+    manager = Manager()
+    evaluation_cache = manager.dict()
+    hits = manager.Value('i', 0)
+    misses = manager.Value('i', 0)
+else:
+    evaluation_cache = {}
+    hits = Value('i', 0)
+    misses = Value('i', 0)
 
-manager = Manager()
-evaluation_cache = manager.dict()
-
-hits = Value('i', 0)
-misses = Value('i', 0)
 def evaluate_individual(
         selected_crops,
         individual,  
@@ -46,15 +56,13 @@ def evaluate_individual(
         misses
     ) -> tuple[float]:
 
-    key = tuple(individual)  # Key for caching
+    key = hashlib.md5(np.array(individual, dtype=np.int32).tobytes()).digest()  
 
     if key in evaluation_cache:
-        with hits.get_lock():
-            hits.value += 1
+        incr(hits)
         return evaluation_cache[key]
     else:
-        with misses.get_lock():
-            misses.value += 1
+        incr(misses)
 
     individual_score = simulate_crop_rotation(
         selected_crops,
@@ -70,7 +78,6 @@ def evaluate_individual(
         past_crops, 
         years
     )
-
 
     result = (individual_score,)
     evaluation_cache[key] = result
@@ -97,7 +104,7 @@ def register_selection_method(method_name: str):
     elif method_name == "random":
         toolbox.register("select", tools.selRandom)
     elif method_name == "tournament":
-        toolbox.register("select", tools.selTournament, tournsize=2)
+        toolbox.register("select", tools.selTournament, tournsize=4)
     else:
         raise ValueError(f"Unknown selection method: {method_name}")
 
@@ -113,13 +120,13 @@ def run_ga_deap(
         crops_required_machinery,
         past_crops, 
         years,
-        selection_method="tournament",
+        selection_method="sustour",
         max_no_improvement=MAX_NO_IMPROVEMENT
     ):
     id_to_crop = {crop.id: crop for crop in selected_crops}
     crop_ids = [crop.id for crop in selected_crops]
 
-    toolbox.register("individual", tools.initIterate, creator.Individual, partial(init_individual, crop_ids=crop_ids, rotation_length=years))
+    toolbox.register("individual", tools.initIterate, creator.Individual, partial(init_individual, crop_ids=crop_ids, rotation_length=2*years))
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     toolbox.register("mate", tools.cxOnePoint)
     toolbox.register("mutate", mutate_individual, crop_ids=crop_ids) 
@@ -144,8 +151,9 @@ def run_ga_deap(
             misses
         )
 
-    pool = multiprocessing.Pool()
-    toolbox.register("map", pool.map)
+    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+    print(f"Processors: {multiprocessing.cpu_count()}")
+    toolbox.register("map", lambda f, data: pool.map(f, data, chunksize=50))
     toolbox.register("evaluate", wrapped_evaluate)
 
     pop = toolbox.population(n=POPULATION_SIZE)
@@ -157,12 +165,12 @@ def run_ga_deap(
     stats.register("min", np.min)
     stats.register("var", np.var)
     logbook = tools.Logbook()
-    logbook.header = ["gen", "avg", "min", "max", "var", "best"]
+    logbook.header = ["gen", "avg", "min", "max", "var", "std", "best"]
 
     # Prepare print format
-    header_fmt = "{:<4} {:<8} {:<8} {:<8} {:<8} {:<8}"
-    line_fmt = "{:<4d} {:<8.3f} {:<8.3f} {:<8.3f} {:<8.3f} {:<8.3f}"
-    print(header_fmt.format("Gen", "Avg", "Max", "Min", "Var", "GlobBest"))
+    header_fmt = "{:<4} {:<8} {:<8} {:<8} {:<8} {:<8} {:<8}"
+    line_fmt = "{:<4d} {:<8.3f} {:<8.3f} {:<8.3f} {:<8.3f} {:<8.3f} {:<8.3f}"
+    print(header_fmt.format("Gen", "Avg", "Max", "Min", "Var", "Std", "GlobBest"))
 
     # Evaluate initial population
     invalid = [ind for ind in pop if not ind.fitness.valid]
@@ -171,11 +179,13 @@ def run_ga_deap(
     hof.update(pop)
     record = stats.compile(pop)
     logbook.record(gen=0, **record)
-    print(line_fmt.format(0, record['avg'], record['max'], record['min'], record['var'], hof[0].fitness.values[0]))
+    std_val = np.sqrt(record['var'])
+    print(line_fmt.format(0, record['avg'], record['max'], record['min'], record['var'], std_val, hof[0].fitness.values[0]))
 
     # Early stopping variables
     best_score = record['max']
     no_improve = 0
+    low_std_count = 0
 
     # Evolutionary loop
     for gen in range(1, GENERATIONS + 1):
@@ -204,14 +214,23 @@ def run_ga_deap(
         for ind, fit in zip(invalid, map(toolbox.evaluate, invalid)):
             ind.fitness.values = fit
 
+        
+
         # Update population and Hall of Fame
-        pop[:] = offspring
+        # pop[:] = offspring
+        # μ+λ
+        pop[:] = tools.selBest(pop + offspring, POPULATION_SIZE)
+
+        # μ,λ
+        # pop[:] = tools.selBest(offspring, POPULATION_SIZE)
         hof.update(pop)
+
         record = stats.compile(pop)
         logbook.record(gen=gen, **record)
-        print(line_fmt.format(gen, record['avg'], record['max'], record['min'], record['var'], hof[0].fitness.values[0]))
+        std_val = np.sqrt(record['var'])
+        print(line_fmt.format(gen, record['avg'], record['max'], record['min'], record['var'], std_val, hof[0].fitness.values[0]))
 
-        # Early stopping check
+        #Early stopping check
         curr_best = record['max']
         if curr_best > best_score:
             best_score = curr_best
@@ -221,6 +240,15 @@ def run_ga_deap(
             if no_improve >= max_no_improvement:
                 print(f"Stopping early at generation {gen} (no improvement for {max_no_improvement} gens).")
                 break
+        
+        if std_val < STD_THRESHOLD:
+            low_std_count += 1
+        else:
+            low_std_count = 0
+
+        if low_std_count >= PATIENCE_STD:
+            print(f"Stopping early at generation {gen} due to low std (< {STD_THRESHOLD}) for {PATIENCE_STD} generations.")
+            break
 
     # Prepare results
     best_ids = list(hof[0])
@@ -248,3 +276,13 @@ def run_ga_deap(
 # Helper function to get crop name from ids
 def get_names_from_ids(best: list[int], id_to_crop: dict[int, Crop]) -> list[Crop]:
     return [id_to_crop[cid].name for cid in best]
+
+def incr(counter):
+    try:
+        with counter.get_lock():
+            counter.value += 1
+    except AttributeError:
+        try:
+            counter.value += 1
+        except AttributeError:
+            counter.set(counter.get() + 1)

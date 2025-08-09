@@ -66,7 +66,7 @@ async def create_rotation_plan(rotation_info: RotationInfo):
 
     crops_required_machinery = get_required_machinery(selected_crops)
     beneficial_rotations = get_beneficial_rotations()
-
+ 
     missing_machinery = rotation_info.machinery
 
     rotation_years = rotation_info.years

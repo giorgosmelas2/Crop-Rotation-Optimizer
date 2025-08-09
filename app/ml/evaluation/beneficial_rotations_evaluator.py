@@ -1,6 +1,3 @@
-from app.ml.core_models.crop import Crop
-from app.services.beneficial_rotations_service import get_beneficial_rotations
-
 def beneficial_rotations_evaluation(crop_names: list[str], past_crops: list[str], beneficial_rotations:list[list[str]]) -> float:
     """
     Checks if the the rotations of the GA has any efficient rotations 

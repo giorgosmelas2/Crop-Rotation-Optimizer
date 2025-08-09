@@ -81,3 +81,71 @@ def test_step_calls_apply_update_and_removes_dead(monkeypatch, dummy_field, dumm
     cell.pests = [agent]
     dummy_pest_manager.step(dummy_field)
     assert cell.pests == []
+
+@pytest.mark.pests
+def test_agent_eventually_dies_over_time(dummy_cell):
+    agent = PestAgent(name="SlowDie", affected_crops=[], affected_families=[], affected_orders=[])
+    agent.lifespan = 1.0
+    agent.lifespan_increase = 0.0  # no increase
+    agent.lifespan_decrease = 0.1  # steady decrease
+    dummy_cell.current_crop = None
+    dummy_cell.crop_history = []
+    dummy_cell.spraying = 2
+
+    steps = 0
+    while agent.is_alive() and steps < 100:
+        agent.update_lifespan(dummy_cell)
+        steps += 1
+
+    assert not agent.is_alive()
+    assert steps <= 20  
+
+@pytest.mark.pests
+def test_agent_survives_with_affected_crop(dummy_cell):
+    crop = make_dummy_crop(name="Wheat", pest="WheatPest")
+    dummy_cell.current_crop = crop
+    dummy_cell.crop_history = []
+    dummy_cell.spraying = 0  # no pesticide
+
+    agent = PestAgent(name="WheatPest", affected_crops=["Wheat"], affected_families=[], affected_orders=[])
+    agent.lifespan = 0.5
+    agent.lifespan_increase = 0.1
+    agent.lifespan_decrease = 0.05
+
+    lifespans = []
+    for _ in range(10):
+        agent.update_lifespan(dummy_cell)
+        lifespans.append(agent.lifespan)
+
+    # Expect lifespan to increase over time, up to 1.0 max
+    assert lifespans[-1] == pytest.approx(1.0)
+
+@pytest.mark.pests
+def test_no_agents_survive_indefinitely(dummy_field, dummy_pest_manager):
+    # 1 agent με μικρή διάρκεια
+    cell = dummy_field.grid.get_cell(0, 0)
+    agent = make_dummy_pest_agent(name="Ghost")
+    agent.lifespan = 0.2
+    agent.lifespan_increase = 0.0
+    agent.lifespan_decrease = 0.05
+
+    steps = 0
+    while any(cell.pests) and steps < 50:
+        dummy_pest_manager.step(dummy_field)
+        steps += 1
+
+    assert cell.pests == []
+
+@pytest.mark.pests
+def test_spread_limited_by_chance(monkeypatch, dummy_field):
+    agent = PestAgent(name="Z", affected_crops=[], affected_families=[], affected_orders=[])
+    agent.row, agent.col = 1, 1
+    agent.spread_chance = 0.0  # never spreads
+    dummy_field.grid.get_cell(1, 1).pests = [agent]
+
+    # 10 βήματα - δεν πρέπει να έχουν εξαπλωθεί
+    for _ in range(10):
+        agent.spread(dummy_field)
+
+    total_pests = sum(len(cell.pests) for row in dummy_field.grid.cell_grid for cell in row)
+    assert total_pests == 1

@@ -19,23 +19,14 @@ class FieldGrid:
         return self.cells 
 
     def get_cell(self, row: int, col: int) -> Cell:
-        if 0 <= row < self.rows:
-            if 0 <= col < len(self.cell_grid[row]):
-                return self.cell_grid[row][col]
-        raise IndexError("Cell coordinates out of bounds")
-    
-    # Adds a crop to the specified cell
-    def sow_crop(self, row: int, col: int, crop: Crop):
-        self.get_cell(row, col).apply_crop(crop)
+        return self.cell_grid[row][col]
 
+    # Sow crop to all cells in the field
     def sow_crop_to_all(self, crop: Crop):
         for cell in self.cells:
             cell.apply_crop(crop)
 
-    # Removes the crop from the specified cell
-    def harvest_crop(self, row: int, col: int):
-        self.get_cell(row, col).remove_crop()
-
+    # Harvest crop from all cells in the field
     def harvest_all(self, crop: Crop, climate: Climate):
         for cell in self.cells:
             update_soil_moisture_after_crop(crop.sow_month, crop.harvest_month, cell, climate)

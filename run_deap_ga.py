@@ -33,6 +33,9 @@ def main():
     dummy_past_pests = dummy_past_pest_agents(past_crops)
     print(f"Dummy past pests length: {len(dummy_past_pests)}")
     pest_manager = dummy_pest_manager(dummy_pests, dummy_past_pests)
+    
+    years = random_dummy_years()
+    print(f"Years length: {years}")
 
     field = random_dummy_field()
     climate = random_dummy_climate()
@@ -41,7 +44,7 @@ def main():
     economic_data = dummy_economic_data()
     missing_machinery = random_dummy_missing_machinery()
     req_machinery = dummy_crops_required_machinery()
-    years = random_dummy_years()
+    years = years
 
     best_individual, best_score, gens_best_fitness, gens_avg_fitness, gens_variance, gens_worst_fitness,= optimize_rotation_plan(
             selected_crops=selected_crops,
