@@ -9,14 +9,13 @@ from deap import base, creator, tools
 from app.ml.core_models.crop import Crop
 from app.ml.simulation_logic.simulation import simulate_crop_rotation
 
-POPULATION_SIZE = 128
+POPULATION_SIZE = 160
 GENERATIONS = 500
-MUTATION_RATE = 0.35
-CROSSOVER_PROB = 0.8
-MAX_NO_IMPROVEMENT = 70
-# ELITE_SIZE = 10
-STD_THRESHOLD = 0.01
-PATIENCE_STD = 100
+MUTATION_RATE = 0.18
+CROSSOVER_PROB = 0.92
+MAX_NO_IMPROVEMENT = 140
+STD_THRESHOLD = 0.008
+PATIENCE_STD = 90
 USE_SHARED_CACHE = False
 
 creator.create("FitnessMax", base.Fitness, weights=(1.0,))
@@ -82,7 +81,6 @@ def evaluate_individual(
     result = (individual_score,)
     evaluation_cache[key] = result
     return result
-
 
 def mutate_individual(individual: list[int], crop_ids: list[int])  -> tuple[list[int]]:
     for i in range(len(individual)):
@@ -190,7 +188,11 @@ def run_ga_deap(
     # Evolutionary loop
     for gen in range(1, GENERATIONS + 1):
         # Compute dynamic mutation rate
-        mut_rate = MUTATION_RATE * (1 - gen / GENERATIONS)
+        mut_rate = max(0.08, MUTATION_RATE * (1 - gen / GENERATIONS))
+
+        # Increase mutation rate if low std persists
+        if low_std_count >= 10:
+            mut_rate = min(0.5, mut_rate * 1.7)
 
         # Selection
         offspring = toolbox.select(pop, len(pop))
@@ -214,15 +216,9 @@ def run_ga_deap(
         for ind, fit in zip(invalid, map(toolbox.evaluate, invalid)):
             ind.fitness.values = fit
 
-        
-
         # Update population and Hall of Fame
-        # pop[:] = offspring
-        # μ+λ
+        # μ+λ elitism 
         pop[:] = tools.selBest(pop + offspring, POPULATION_SIZE)
-
-        # μ,λ
-        # pop[:] = tools.selBest(offspring, POPULATION_SIZE)
         hof.update(pop)
 
         record = stats.compile(pop)
